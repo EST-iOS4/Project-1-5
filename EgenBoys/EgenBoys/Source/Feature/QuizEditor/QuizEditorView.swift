@@ -7,6 +7,7 @@
 
 import SwiftUI
 import PhotosUI // PhotosPicker 사용을 위해 import
+import AVKit // VideoPlayer 사용을 위해 import
 
 enum MediaType {
     case image
@@ -30,6 +31,7 @@ struct QuizEditorView: View {
     @State private var selectedPhotoItem: PhotosPickerItem?
     @State private var selectedMediaData: Data?
     @State private var selectedMediaType: MediaType?
+    @State private var videoPreviewURL: URL?
     
     var body: some View {
         NavigationStack {
@@ -81,9 +83,14 @@ struct QuizEditorView: View {
                     if let data = selectedMediaData, let type = selectedMediaType {
                         mediaPreview(data: data, type: type)
                         Button("삭제", role: .destructive) {
+                            // 임시 파일 남아있으면 삭제
+                            if let videoPreviewURL {
+                                try? FileManager.default.removeItem(at: videoPreviewURL)
+                            }
                             selectedPhotoItem = nil
                             selectedMediaData = nil
                             selectedMediaType = nil
+                            videoPreviewURL = nil
                         }
                     } else {
                         PhotosPicker(
@@ -125,18 +132,34 @@ struct QuizEditorView: View {
             .onChange(of: selectedPhotoItem) { newItem in
                     Task {
                         // 사진 / 영상을 고르면 비동기로 처리
-                        if let data = try? await newItem?.loadTransferable(type: Data.self) {
+                        // 임시 파일 삭제
+                        if let videoPreviewURL {
+                            try? FileManager.default.removeItem(at: videoPreviewURL)
+                            self.videoPreviewURL = nil
+                        }
+                        
+                        guard let data = try? await newItem?.loadTransferable(type: Data.self) else { return }
                             if newItem?.supportedContentTypes.contains(.movie) == true {
                                 // 영상은 미디어타입을 video로 지정
                                 selectedMediaType = .video
+                                
+                                // 임시 파일 저장 로직
+                                let tempDir = FileManager.default.temporaryDirectory
+                                let tempURL = tempDir.appendingPathComponent("\(UUID().uuidString).mp4")
+                                do {
+                                    try data.write(to: tempURL)
+                                    self.videoPreviewURL = tempURL
+                                } catch {
+                                    print("임시 파일 저장 실패: \(error)")
+                                }
+                                
                             } else {
                                 // 사진은 image로 지정
                                 selectedMediaType = .image
                             }
-                            selectedMediaData = data
+                            self.selectedMediaData = data
                         }
                     }
-            }
         }
     }
     
@@ -168,13 +191,10 @@ struct QuizEditorView: View {
                     .scaledToFit()
                     .frame(maxHeight: 200)
                     .cornerRadius(12)
-            } else if type == .video {
-                HStack(spacing: 12) {
-                    Image(systemName: "video.fill")
-                        .font(.largeTitle)
-                    Text("동영상 파일이 선택되었습니다.")
-                }
-                .frame(height: 100)
+            } else if type == .video, let videoURL = videoPreviewURL {
+                VideoPlayer(player: AVPlayer(url: videoURL))
+                    .frame(height: 200)
+                    .cornerRadius(12)
             }
         }
         .frame(maxWidth: .infinity)
