@@ -3,23 +3,18 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 56;
+	objectVersion = 70;
 	objects = {
-
-/* Begin PBXBuildFile section */
-		7065BD192E45F1C800E0A840 /* EgenBoysApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7065BD182E45F1C800E0A840 /* EgenBoysApp.swift */; };
-		7065BD1B2E45F1C800E0A840 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7065BD1A2E45F1C800E0A840 /* ContentView.swift */; };
-		7065BD1D2E45F1CA00E0A840 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7065BD1C2E45F1CA00E0A840 /* Assets.xcassets */; };
-		7065BD202E45F1CA00E0A840 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7065BD1F2E45F1CA00E0A840 /* Preview Assets.xcassets */; };
-/* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		7065BD152E45F1C800E0A840 /* EgenBoys.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = EgenBoys.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		7065BD182E45F1C800E0A840 /* EgenBoysApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EgenBoysApp.swift; sourceTree = "<group>"; };
-		7065BD1A2E45F1C800E0A840 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
-		7065BD1C2E45F1CA00E0A840 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		7065BD1F2E45F1CA00E0A840 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		70FA71DF2E496EFE0082C98F /* Application */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Application; sourceTree = "<group>"; };
+		70FA71E02E496F0B0082C98F /* Source */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Source; sourceTree = "<group>"; };
+		70FA71E12E496F100082C98F /* Resource */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Resource; sourceTree = "<group>"; };
+/* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		7065BD122E45F1C800E0A840 /* Frameworks */ = {
@@ -51,20 +46,11 @@
 		7065BD172E45F1C800E0A840 /* EgenBoys */ = {
 			isa = PBXGroup;
 			children = (
-				7065BD182E45F1C800E0A840 /* EgenBoysApp.swift */,
-				7065BD1A2E45F1C800E0A840 /* ContentView.swift */,
-				7065BD1C2E45F1CA00E0A840 /* Assets.xcassets */,
-				7065BD1E2E45F1CA00E0A840 /* Preview Content */,
+				70FA71DF2E496EFE0082C98F /* Application */,
+				70FA71E12E496F100082C98F /* Resource */,
+				70FA71E02E496F0B0082C98F /* Source */,
 			);
 			path = EgenBoys;
-			sourceTree = "<group>";
-		};
-		7065BD1E2E45F1CA00E0A840 /* Preview Content */ = {
-			isa = PBXGroup;
-			children = (
-				7065BD1F2E45F1CA00E0A840 /* Preview Assets.xcassets */,
-			);
-			path = "Preview Content";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -81,6 +67,11 @@
 			buildRules = (
 			);
 			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				70FA71DF2E496EFE0082C98F /* Application */,
+				70FA71E02E496F0B0082C98F /* Source */,
+				70FA71E12E496F100082C98F /* Resource */,
 			);
 			name = EgenBoys;
 			productName = EgenBoys;
@@ -125,8 +116,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				7065BD202E45F1CA00E0A840 /* Preview Assets.xcassets in Resources */,
-				7065BD1D2E45F1CA00E0A840 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -137,8 +126,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				7065BD1B2E45F1C800E0A840 /* ContentView.swift in Sources */,
-				7065BD192E45F1C800E0A840 /* EgenBoysApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -271,7 +258,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "\"EgenBoys/Preview Content\"";
+				DEVELOPMENT_ASSET_PATHS = "\"EgenBoys/Resource/Preview Content\"";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -299,7 +286,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "\"EgenBoys/Preview Content\"";
+				DEVELOPMENT_ASSET_PATHS = "\"EgenBoys/Resource/Preview Content\"";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
