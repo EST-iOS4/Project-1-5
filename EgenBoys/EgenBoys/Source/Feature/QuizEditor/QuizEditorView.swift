@@ -28,10 +28,20 @@ struct QuizEditorView: View {
     @State private var newCategoryName: String = ""
     @State private var isShowingAlert: Bool = false
     
-    @State private var selectedPhotoItem: PhotosPickerItem?
-    @State private var selectedMediaData: Data?
-    @State private var selectedMediaType: MediaType?
-    @State private var videoPreviewURL: URL?
+    @State private var selectedPhotoItems: [PhotosPickerItem] = []
+    @State private var selectedMediaItems: [MediaItem] = []
+    
+    struct MediaItem: Identifiable {
+        let id = UUID()
+        let type: MediaType
+        let data: Data
+        var previewURL: URL?
+    }
+
+//    @State private var selectedPhotoItem: PhotosPickerItem?
+//    @State private var selectedMediaData: Data?
+//    @State private var selectedMediaType: MediaType?
+//    @State private var videoPreviewURL: URL?
     
     var body: some View {
         NavigationStack {
@@ -80,29 +90,30 @@ struct QuizEditorView: View {
                 }
                 
                 Section("이미지 / 동영상 추가") {
-                    if let data = selectedMediaData, let type = selectedMediaType {
-                        mediaPreview(data: data, type: type)
+                    ForEach($selectedMediaItems) { $item in
+                        mediaPreview(item: item)
+                        
                         Button("삭제", role: .destructive) {
-                            // 임시 파일 남아있으면 삭제
-                            if let videoPreviewURL {
-                                try? FileManager.default.removeItem(at: videoPreviewURL)
+                            if let index = selectedMediaItems.firstIndex(where: { $0.id == item.id }) {
+                                if let url = selectedMediaItems[index].previewURL {
+                                    try? FileManager.default.removeItem(at: url)
+                                }
+                                selectedMediaItems.remove(at: index)
                             }
-                            selectedPhotoItem = nil
-                            selectedMediaData = nil
-                            selectedMediaType = nil
-                            videoPreviewURL = nil
                         }
-                    } else {
-                        PhotosPicker(
-                            selection: $selectedPhotoItem,
-                            matching: .any(of: [.images, .videos])
-                        ) {
-                            HStack {
-                                Image(systemName: "photo.on.rectangle.angled")
-                                Text("사진 보관함에서 선택")
-                            }
-                            .foregroundColor(.accentColor)
+                        .buttonStyle(.plain)
+                        .foregroundColor(.red)
+                    }
+                    
+                    PhotosPicker(selection: $selectedPhotoItems,
+                                 maxSelectionCount: 0,
+                                 matching: .any(of: [.images, .videos])
+                    ) {
+                        HStack {
+                            Image(systemName: "photo.on.rectangle.angled")
+                            Text("사진 보관함에서 추가하기")
                         }
+                        .foregroundColor(.accentColor)
                     }
                 }
                 
@@ -129,34 +140,30 @@ struct QuizEditorView: View {
             } message: {
                 Text("추가할 카테고리의 이름을 입력해주세요.")
             }
-            .onChange(of: selectedPhotoItem) { newItem in
+            .onChange(of: selectedPhotoItems) { newItems in
                 Task {
                     // 사진 / 영상을 고르면 비동기로 처리
-                    // 임시 파일 삭제
-                    if let videoPreviewURL {
-                        try? FileManager.default.removeItem(at: videoPreviewURL)
-                        self.videoPreviewURL = nil
+                    // 기존에 선택했던 미디어를 삭제
+                    for item in selectedMediaItems {
+                        if let url = item.previewURL {
+                            try? FileManager.default.removeItem(at: url)
+                        }
                     }
+                    selectedMediaItems.removeAll()
                     
-                    guard let data = try? await newItem?.loadTransferable(type: Data.self) else { return }
-                    if newItem?.supportedContentTypes.first(where: { $0.conforms(to: .movie) }) != nil {
-                        // 영상은 미디어타입을 video로 지정
-                        self.selectedMediaType = .video
-                            
-                        // 임시 파일 저장 로직
-                        let tempDir = FileManager.default.temporaryDirectory
-                        let tempURL = tempDir.appendingPathComponent("\(UUID().uuidString).mp4")
-                        do {
-                            try data.write(to: tempURL)
-                            self.videoPreviewURL = tempURL
-                        } catch {
-                            print("임시 파일 저장 실패: \(error.localizedDescription)")
+                    for item in newItems {
+                        guard let data = try? await item.loadTransferable(type: Data.self) else { continue }
+                        if item.supportedContentTypes.first(where: { $0.conforms(to: .movie) }) != nil {
+                            // 영상은 미디어타입을 video로 지정
+                            let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent("\(UUID().uuidString).mp4")
+                            try? data.write(to: tempURL)
+                            let newMediaItem = MediaItem(type: .video, data: data, previewURL: tempURL)
+                            selectedMediaItems.append(newMediaItem)
+                        } else {
+                            let newMediaItem = MediaItem(type: .image, data: data, previewURL: nil)
+                            selectedMediaItems.append(newMediaItem)
                         }
-                    } else {
-                        // 사진은 image로 지정
-                        selectedMediaType = .image
-                        }
-                    self.selectedMediaData = data
+                    }
                 }
             }
         }
@@ -182,17 +189,17 @@ struct QuizEditorView: View {
     }
     
     @ViewBuilder
-    private func mediaPreview(data: Data, type: MediaType) -> some View {
+    private func mediaPreview(item: MediaItem) -> some View {
         VStack {
-            if type == .image, let uiImage = UIImage(data: data) {
+            if item.type == .image, let uiImage = UIImage(data: item.data) {
                 Image(uiImage: uiImage)
                     .resizable()
                     .scaledToFit()
                     .frame(maxHeight: 200)
                     .cornerRadius(12)
-            } else if type == .video {
-                if let videoURL = videoPreviewURL {
-                    VideoPlayer(player: AVPlayer(url: videoURL))
+            } else if item.type == .video {
+                if let url = item.previewURL {
+                    VideoPlayer(player: AVPlayer(url: url))
                         .frame(height: 200)
                         .cornerRadius(12)
                 } else {
