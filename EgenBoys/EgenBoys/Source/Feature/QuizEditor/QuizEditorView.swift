@@ -130,36 +130,35 @@ struct QuizEditorView: View {
                 Text("추가할 카테고리의 이름을 입력해주세요.")
             }
             .onChange(of: selectedPhotoItem) { newItem in
-                    Task {
-                        // 사진 / 영상을 고르면 비동기로 처리
-                        // 임시 파일 삭제
-                        if let videoPreviewURL {
-                            try? FileManager.default.removeItem(at: videoPreviewURL)
-                            self.videoPreviewURL = nil
-                        }
-                        
-                        guard let data = try? await newItem?.loadTransferable(type: Data.self) else { return }
-                            if newItem?.supportedContentTypes.contains(.movie) == true {
-                                // 영상은 미디어타입을 video로 지정
-                                selectedMediaType = .video
-                                
-                                // 임시 파일 저장 로직
-                                let tempDir = FileManager.default.temporaryDirectory
-                                let tempURL = tempDir.appendingPathComponent("\(UUID().uuidString).mp4")
-                                do {
-                                    try data.write(to: tempURL)
-                                    self.videoPreviewURL = tempURL
-                                } catch {
-                                    print("임시 파일 저장 실패: \(error)")
-                                }
-                                
-                            } else {
-                                // 사진은 image로 지정
-                                selectedMediaType = .image
-                            }
-                            self.selectedMediaData = data
-                        }
+                Task {
+                    // 사진 / 영상을 고르면 비동기로 처리
+                    // 임시 파일 삭제
+                    if let videoPreviewURL {
+                        try? FileManager.default.removeItem(at: videoPreviewURL)
+                        self.videoPreviewURL = nil
                     }
+                    
+                    guard let data = try? await newItem?.loadTransferable(type: Data.self) else { return }
+                    if newItem?.supportedContentTypes.first(where: { $0.conforms(to: .movie) }) != nil {
+                        // 영상은 미디어타입을 video로 지정
+                        self.selectedMediaType = .video
+                            
+                        // 임시 파일 저장 로직
+                        let tempDir = FileManager.default.temporaryDirectory
+                        let tempURL = tempDir.appendingPathComponent("\(UUID().uuidString).mp4")
+                        do {
+                            try data.write(to: tempURL)
+                            self.videoPreviewURL = tempURL
+                        } catch {
+                            print("임시 파일 저장 실패: \(error.localizedDescription)")
+                        }
+                    } else {
+                        // 사진은 image로 지정
+                        selectedMediaType = .image
+                        }
+                    self.selectedMediaData = data
+                }
+            }
         }
     }
     
@@ -191,10 +190,15 @@ struct QuizEditorView: View {
                     .scaledToFit()
                     .frame(maxHeight: 200)
                     .cornerRadius(12)
-            } else if type == .video, let videoURL = videoPreviewURL {
-                VideoPlayer(player: AVPlayer(url: videoURL))
-                    .frame(height: 200)
-                    .cornerRadius(12)
+            } else if type == .video {
+                if let videoURL = videoPreviewURL {
+                    VideoPlayer(player: AVPlayer(url: videoURL))
+                        .frame(height: 200)
+                        .cornerRadius(12)
+                } else {
+                    ProgressView()
+                        .frame(height: 200)
+                }
             }
         }
         .frame(maxWidth: .infinity)
