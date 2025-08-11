@@ -37,11 +37,6 @@ struct QuizEditorView: View {
         let data: Data
         var previewURL: URL?
     }
-
-//    @State private var selectedPhotoItem: PhotosPickerItem?
-//    @State private var selectedMediaData: Data?
-//    @State private var selectedMediaType: MediaType?
-//    @State private var videoPreviewURL: URL?
     
     var body: some View {
         NavigationStack {
@@ -51,20 +46,38 @@ struct QuizEditorView: View {
                         .autocorrectionDisabled()
                 }
                 
-                Section("보기 및 정답") {
-                    ForEach(0..<answer.count, id: \.self) { index in
-                        HStack {
-                            TextField("\(index + 1). 선택지를 입력하세요.", text: $answer[index])
-                                .autocorrectionDisabled()
-                                .padding(.vertical, 8)
-                            Button(action: {
-                                toggleAnswerSelection(at: index)
-                            }) {
-                                Image(systemName: correctAnswerIndex.contains(index) ? "checkmark.square.fill" : "square")
+                Section("보기 및 정답 체크") {
+                    VStack {
+                        ForEach(0..<answer.count, id: \.self) { index in
+                            HStack {
+                                TextField("\(index + 1). 선택지를 입력하세요.", text: $answer[index])
+                                    .autocorrectionDisabled()
+                                    .padding(.vertical, 8)
+                                Button(action: {
+                                    toggleAnswerSelection(at: index)
+                                }) {
+                                    Image(systemName: correctAnswerIndex.contains(index) ? "checkmark.square.fill" : "square")
+                                }
+                                .buttonStyle(.plain)
+                                
+                                if answer.count > 2 {
+                                    Button(action: {
+                                        removeAnswer(at: index)
+                                    }) {
+                                        Image(systemName: "trash")
+                                            .foregroundColor(.red)
+                                    }
+                                    .buttonStyle(.plain)
+                                }
                             }
-                            .buttonStyle(.plain)
+                            .padding()
                         }
-                        .padding()
+                        Button(action: addAnswer) {
+                            HStack {
+                                Image(systemName: "plus.circle.fill")
+                                Text("보기 추가")
+                            }
+                        }
                     }
                 }
                 
@@ -175,6 +188,14 @@ struct QuizEditorView: View {
         } else {
             correctAnswerIndex.insert(index)
         }
+    }
+    
+    func addAnswer() {
+        answer.append("")
+    }
+    func removeAnswer(at index: Int) {
+        answer.remove(at: index)
+        correctAnswerIndex.removeAll()
     }
     
     func addNewCategory() {
