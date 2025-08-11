@@ -34,7 +34,9 @@ enum TabItem: String, CaseIterable {
     var view: some View {
         switch self {
         case .quizList:
-            QuizListView()
+            NavigationView {
+                QuizListView()
+            }
         case .quizPlay:
             QuizPlayView()
         case .quizEditor:
