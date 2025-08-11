@@ -6,11 +6,180 @@
 //
 
 import SwiftUI
+import PhotosUI // PhotosPicker 사용을 위해 import
+
+enum MediaType {
+    case image
+    case video
+}
 
 struct QuizEditorView: View {
+    @State private var question: String = ""
+    
+    @State private var answer: [String] = Array(repeating: "", count: 4)
+    @State private var correctAnswerIndex: Set<Int> = []
+    
+    @State private var difficulty: [String] = ["쉬움", "보통", "어려움"]
+    @State private var selectedDifficulty: String = "보통"
+    
+    @State private var categories: [String] = ["iOS", "Design", "CS", "직접 추가하기..."]
+    @State private var selectedCategory: String = "iOS"
+    @State private var newCategoryName: String = ""
+    @State private var isShowingAlert: Bool = false
+    
+    @State private var selectedPhotoItem: PhotosPickerItem?
+    @State private var selectedMediaData: Data?
+    @State private var selectedMediaType: MediaType?
+    
     var body: some View {
-        Text("퀴즈 등록 화면")
+        NavigationStack {
+            Form {
+                Section("문제") {
+                    TextField("문제를 입력하세요.", text: $question)
+                        .autocorrectionDisabled()
+                }
+                
+                Section("보기 및 정답") {
+                    ForEach(0..<answer.count, id: \.self) { index in
+                        HStack {
+                            TextField("\(index + 1). 선택지를 입력하세요.", text: $answer[index])
+                                .autocorrectionDisabled()
+                                .padding(.vertical, 8)
+                            Button(action: {
+                                toggleAnswerSelection(at: index)
+                            }) {
+                                Image(systemName: correctAnswerIndex.contains(index) ? "checkmark.square.fill" : "square")
+                            }
+                            .buttonStyle(.plain)
+                        }
+                        .padding()
+                    }
+                }
+                
+                Section("난이도 및 카테고리") {
+                    Picker("난이도", selection: $selectedDifficulty) {
+                        ForEach(difficulty, id: \.self) { difficulty in
+                            Text(difficulty)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                    
+                    Picker("카테고리", selection: $selectedCategory) {
+                        ForEach(categories, id: \.self) { category in
+                            Text(category)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                    .onChange(of: selectedCategory) { newValue in
+                        if newValue == "직접 추가하기..." {
+                            self.isShowingAlert = true
+                        }
+                    }
+                }
+                
+                Section("이미지 / 동영상 추가") {
+                    if let data = selectedMediaData, let type = selectedMediaType {
+                        mediaPreview(data: data, type: type)
+                        Button("삭제", role: .destructive) {
+                            selectedPhotoItem = nil
+                            selectedMediaData = nil
+                            selectedMediaType = nil
+                        }
+                    } else {
+                        PhotosPicker(
+                            selection: $selectedPhotoItem,
+                            matching: .any(of: [.images, .videos])
+                        ) {
+                            HStack {
+                                Image(systemName: "photo.on.rectangle.angled")
+                                Text("사진 보관함에서 선택")
+                            }
+                            .foregroundColor(.accentColor)
+                        }
+                    }
+                }
+                
+                Section {
+                    Button("저장하기") {
+                        
+                    }
+                    .frame(minWidth: 0, maxWidth: .infinity)
+                    .padding()
+                    .background(Color.blue)
+                    .foregroundColor(.white)
+                    .cornerRadius(8)
+                }
+                .listRowInsets(EdgeInsets()) // 버튼 바깥 여백 제거
+            }
+            .navigationTitle("퀴즈 등록")
+            .navigationBarTitleDisplayMode(.inline)
+            .alert("새 카테고리 추가", isPresented: $isShowingAlert) {
+                TextField("카테고리 이름", text: $newCategoryName)
+                Button("추가", action: addNewCategory)
+                Button("취소", role: .cancel) {
+                    selectedCategory = categories.first ?? "iOS"
+                }
+            } message: {
+                Text("추가할 카테고리의 이름을 입력해주세요.")
+            }
+            .onChange(of: selectedPhotoItem) { newItem in
+                    Task {
+                        // 사진 / 영상을 고르면 비동기로 처리
+                        if let data = try? await newItem?.loadTransferable(type: Data.self) {
+                            if newItem?.supportedContentTypes.contains(.movie) == true {
+                                // 영상은 미디어타입을 video로 지정
+                                selectedMediaType = .video
+                            } else {
+                                // 사진은 image로 지정
+                                selectedMediaType = .image
+                            }
+                            selectedMediaData = data
+                        }
+                    }
+            }
+        }
     }
+    
+    func toggleAnswerSelection(at index: Int) {
+        if correctAnswerIndex.contains(index) {
+            correctAnswerIndex.remove(index)
+        } else {
+            correctAnswerIndex.insert(index)
+        }
+    }
+    
+    func addNewCategory() {
+        let trimmedName = newCategoryName.trimmingCharacters(in: .whitespaces)
+        guard !trimmedName.isEmpty else {
+            return
+        }
+        
+        categories.insert(trimmedName, at: categories.count - 1)
+        selectedCategory = trimmedName
+        newCategoryName = ""
+    }
+    
+    @ViewBuilder
+    private func mediaPreview(data: Data, type: MediaType) -> some View {
+        VStack {
+            if type == .image, let uiImage = UIImage(data: data) {
+                Image(uiImage: uiImage)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(maxHeight: 200)
+                    .cornerRadius(12)
+            } else if type == .video {
+                HStack(spacing: 12) {
+                    Image(systemName: "video.fill")
+                        .font(.largeTitle)
+                    Text("동영상 파일이 선택되었습니다.")
+                }
+                .frame(height: 100)
+            }
+        }
+        .frame(maxWidth: .infinity)
+    }
+    
 }
 
 #Preview {
