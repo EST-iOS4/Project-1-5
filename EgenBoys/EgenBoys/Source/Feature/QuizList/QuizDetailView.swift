@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct QuizDetailView: View {
-    @Binding var item: QuizItem
+    let item: QuizItem
     
     var body: some View {
         ScrollView {

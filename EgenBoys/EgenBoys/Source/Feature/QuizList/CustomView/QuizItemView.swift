@@ -13,10 +13,11 @@ struct QuizItem: Identifiable {
     let description: String
     let imageURL: URL?
     let videoURL: URL?
+    var category: QuizCategory
 }
 
 struct QuizItemView: View {
-    @Binding var item: QuizItem
+    let item: QuizItem
     
     var body: some View {
         HStack {
