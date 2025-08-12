@@ -43,7 +43,6 @@ struct QuizEditorView: View {
     @State private var selectedDifficulty: Difficulty = .medium
     
     @State private var selectedCategory: QuizCategory = .ios
-//    @State private var isShowingAlert: Bool = false
     
     @State private var selectedPhotoItems: [PhotosPickerItem] = []
     @State private var selectedMediaItems: [MediaItem] = []
@@ -126,11 +125,6 @@ struct QuizEditorView: View {
                         }
                     }
                     .pickerStyle(.menu)
-//                    .onChange(of: selectedCategory) { newValue in
-//                        if newValue == "직접 추가하기..." {
-//                            self.isShowingAlert = true
-//                        }
-//                    }
                 }
                 
                 Section("이미지 / 동영상 추가") {
@@ -190,16 +184,6 @@ struct QuizEditorView: View {
             }
             .navigationTitle("퀴즈 등록 / 편집")
             .navigationBarTitleDisplayMode(.inline)
-//            .alert("새 카테고리 추가", isPresented: $isShowingAlert) {
-//                TextField("카테고리 이름", text: $newCategoryName)
-//                    .autocorrectionDisabled()
-//                Button("추가", action: addNewCategory)
-//                Button("취소", role: .cancel) {
-//                    selectedCategory = categories.first ?? "iOS"
-//                }
-//            } message: {
-//                Text("추가할 카테고리의 이름을 입력해주세요.")
-//            }
             .onChange(of: selectedPhotoItems) { newItems in
                 Task {
                     // 사진 / 영상을 고르면 비동기로 처리
@@ -237,17 +221,6 @@ struct QuizEditorView: View {
         newQuestion.answerOptions.removeAll { $0.id == option.id }
     }
     
-//    func addNewCategory() {
-//        let trimmedName = newCategoryName.trimmingCharacters(in: .whitespaces)
-//        guard !trimmedName.isEmpty else {
-//            selectedCategory = categories.first ?? "iOS"
-//            return
-//        }
-//        
-//        categories.insert(trimmedName, at: categories.count - 1)
-//        selectedCategory = trimmedName
-//        newCategoryName = ""
-//    }
     @ViewBuilder
     private func mediaPreview(item: MediaItem) -> some View {
         VStack {
