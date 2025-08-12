@@ -14,20 +14,36 @@ enum MediaType {
     case video
 }
 
+enum Difficulty: String, CaseIterable {
+    case easy = "쉬움"
+    case medium = "보통"
+    case hard = "어려움"
+}
+
+struct AnswerOption: Identifiable {
+    let id = UUID()
+    var text: String = ""
+    var isCorrect: Bool = false
+}
+
+struct Question {
+    var questionText: String = ""
+    var description: String = ""
+    var answerOptions: [AnswerOption] = [
+        AnswerOption(),
+        AnswerOption(),
+        AnswerOption(),
+        AnswerOption()
+    ]
+}
+
 struct QuizEditorView: View {
-    @State private var question: String = ""
-    @State private var description: String = ""
+    @State private var newQuestion = Question()
     
-    @State private var answer: [String] = Array(repeating: "", count: 4)
-    @State private var correctAnswerIndex: Set<Int> = []
+    @State private var selectedDifficulty: Difficulty = .medium
     
-    @State private var difficulty: [String] = ["쉬움", "보통", "어려움"]
-    @State private var selectedDifficulty: String = "보통"
-    
-    @State private var categories: [String] = QuizCategory.allCases.filter { $0 != .all}.map { $0.rawValue } + ["직접 추가하기..."]
-    @State private var selectedCategory: String = "iOS"
-    @State private var newCategoryName: String = ""
-    @State private var isShowingAlert: Bool = false
+    @State private var selectedCategory: QuizCategory = .ios
+//    @State private var isShowingAlert: Bool = false
     
     @State private var selectedPhotoItems: [PhotosPickerItem] = []
     @State private var selectedMediaItems: [MediaItem] = []
@@ -44,11 +60,11 @@ struct QuizEditorView: View {
             Form {
                 Section("문제 및 설명") {
                     VStack {
-                        TextField("문제를 입력하세요.", text: $question)
+                        TextField("문제를 입력하세요.", text: $newQuestion.questionText, axis: .vertical)
                             .autocorrectionDisabled()
                             .padding(.vertical, 8)
                         Divider()
-                        TextField("문제에 대한 설명을 입력하세요.", text: $description)
+                        TextField("문제에 대한 설명을 입력하세요.", text: $newQuestion.description, axis: .vertical)
                             .autocorrectionDisabled()
                             .padding(.vertical, 20)
                     }
@@ -56,21 +72,25 @@ struct QuizEditorView: View {
                 
                 Section("보기 및 정답 체크") {
                     VStack {
-                        ForEach(0..<answer.count, id: \.self) { index in
+                        ForEach($newQuestion.answerOptions) { $option in
                             HStack {
-                                TextField("\(index + 1). 선택지를 입력하세요.", text: $answer[index])
+                                if let index = newQuestion.answerOptions.firstIndex(where: { $0.id == option.id }) {
+                                    Text("\(index + 1).")
+                                        .foregroundColor(.gray)
+                                }
+                                TextField("선택지를 입력하세요.", text: $option.text)
                                     .autocorrectionDisabled()
                                     .padding(.vertical, 5)
                                 Button(action: {
-                                    toggleAnswerSelection(at: index)
+                                    option.isCorrect.toggle()
                                 }) {
-                                    Image(systemName: correctAnswerIndex.contains(index) ? "checkmark.square.fill" : "square")
+                                    Image(systemName: option.isCorrect ? "checkmark.square.fill" : "square")
                                 }
                                 .buttonStyle(.plain)
                                 
-                                if answer.count > 2 {
+                                if newQuestion.answerOptions.count > 2 {
                                     Button(action: {
-                                        removeAnswer(at: index)
+                                        removeAnswer(option: option)
                                     }) {
                                         Image(systemName: "trash")
                                             .foregroundColor(.red)
@@ -94,23 +114,23 @@ struct QuizEditorView: View {
                 
                 Section("난이도 및 카테고리") {
                     Picker("난이도", selection: $selectedDifficulty) {
-                        ForEach(difficulty, id: \.self) { difficulty in
-                            Text(difficulty)
+                        ForEach(Difficulty.allCases, id: \.self) { difficulty in
+                            Text(difficulty.rawValue).tag(difficulty)
                         }
                     }
                     .pickerStyle(.menu)
                     
                     Picker("카테고리", selection: $selectedCategory) {
-                        ForEach(categories, id: \.self) { category in
-                            Text(category)
+                        ForEach(QuizCategory.allCases.filter { $0 != .all }, id: \.self) { category in
+                            Text(category.rawValue).tag(category)
                         }
                     }
                     .pickerStyle(.menu)
-                    .onChange(of: selectedCategory) { newValue in
-                        if newValue == "직접 추가하기..." {
-                            self.isShowingAlert = true
-                        }
-                    }
+//                    .onChange(of: selectedCategory) { newValue in
+//                        if newValue == "직접 추가하기..." {
+//                            self.isShowingAlert = true
+//                        }
+//                    }
                 }
                 
                 Section("이미지 / 동영상 추가") {
@@ -144,10 +164,9 @@ struct QuizEditorView: View {
                 Section {
                     Button("저장하기") {
                         print("--------------- 퀴즈 저장 정보 ---------------")
-                        print("질문: \(question)")
-                        print("설명: \(description)")
-                        print("보기 목록: \(answer)")
-                        print("정답 인덱스: \(correctAnswerIndex)")
+                        print("질문: \(newQuestion.questionText)")
+                        print("설명: \(newQuestion.description)")
+                        print("보기 목록: \(newQuestion.answerOptions.map { ($0.text, $0.isCorrect) })")
                         print("난이도: \(selectedDifficulty)")
                         print("선택된 카테고리: \(selectedCategory)")
                                 
@@ -171,16 +190,16 @@ struct QuizEditorView: View {
             }
             .navigationTitle("퀴즈 등록 / 편집")
             .navigationBarTitleDisplayMode(.inline)
-            .alert("새 카테고리 추가", isPresented: $isShowingAlert) {
-                TextField("카테고리 이름", text: $newCategoryName)
-                    .autocorrectionDisabled()
-                Button("추가", action: addNewCategory)
-                Button("취소", role: .cancel) {
-                    selectedCategory = categories.first ?? "iOS"
-                }
-            } message: {
-                Text("추가할 카테고리의 이름을 입력해주세요.")
-            }
+//            .alert("새 카테고리 추가", isPresented: $isShowingAlert) {
+//                TextField("카테고리 이름", text: $newCategoryName)
+//                    .autocorrectionDisabled()
+//                Button("추가", action: addNewCategory)
+//                Button("취소", role: .cancel) {
+//                    selectedCategory = categories.first ?? "iOS"
+//                }
+//            } message: {
+//                Text("추가할 카테고리의 이름을 입력해주세요.")
+//            }
             .onChange(of: selectedPhotoItems) { newItems in
                 Task {
                     // 사진 / 영상을 고르면 비동기로 처리
@@ -210,35 +229,25 @@ struct QuizEditorView: View {
             .ignoresSafeArea(.keyboard, edges: .bottom)
         }
     }
-    
-    func toggleAnswerSelection(at index: Int) {
-        if correctAnswerIndex.contains(index) {
-            correctAnswerIndex.remove(index)
-        } else {
-            correctAnswerIndex.insert(index)
-        }
-    }
-    
-    func addAnswer() {
-        answer.append("")
-    }
-    func removeAnswer(at index: Int) {
-        answer.remove(at: index)
-        correctAnswerIndex.removeAll()
-    }
-    
-    func addNewCategory() {
-        let trimmedName = newCategoryName.trimmingCharacters(in: .whitespaces)
-        guard !trimmedName.isEmpty else {
-            selectedCategory = categories.first ?? "iOS"
-            return
-        }
         
-        categories.insert(trimmedName, at: categories.count - 1)
-        selectedCategory = trimmedName
-        newCategoryName = ""
+    func addAnswer() {
+        newQuestion.answerOptions.append(AnswerOption())
+    }
+    func removeAnswer(option: AnswerOption) {
+        newQuestion.answerOptions.removeAll { $0.id == option.id }
     }
     
+//    func addNewCategory() {
+//        let trimmedName = newCategoryName.trimmingCharacters(in: .whitespaces)
+//        guard !trimmedName.isEmpty else {
+//            selectedCategory = categories.first ?? "iOS"
+//            return
+//        }
+//        
+//        categories.insert(trimmedName, at: categories.count - 1)
+//        selectedCategory = trimmedName
+//        newCategoryName = ""
+//    }
     @ViewBuilder
     private func mediaPreview(item: MediaItem) -> some View {
         VStack {
