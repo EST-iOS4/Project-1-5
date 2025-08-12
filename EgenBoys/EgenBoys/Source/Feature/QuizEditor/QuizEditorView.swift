@@ -16,6 +16,7 @@ enum MediaType {
 
 struct QuizEditorView: View {
     @State private var question: String = ""
+    @State private var description: String = ""
     
     @State private var answer: [String] = Array(repeating: "", count: 4)
     @State private var correctAnswerIndex: Set<Int> = []
@@ -24,7 +25,7 @@ struct QuizEditorView: View {
     @State private var selectedDifficulty: String = "보통"
     
     @State private var categories: [String] = ["iOS", "Design", "CS", "직접 추가하기..."]
-    @State private var selectedCategories: Set<String> = []
+    @State private var selectedCategory: String = "iOS"
     @State private var newCategoryName: String = ""
     @State private var isShowingAlert: Bool = false
     
@@ -41,9 +42,16 @@ struct QuizEditorView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("문제") {
-                    TextField("문제를 입력하세요.", text: $question)
-                        .autocorrectionDisabled()
+                Section("문제 및 설명") {
+                    VStack {
+                        TextField("문제를 입력하세요.", text: $question)
+                            .autocorrectionDisabled()
+                            .padding(.vertical, 8)
+                        Divider()
+                        TextField("문제에 대한 설명을 입력하세요.", text: $description)
+                            .autocorrectionDisabled()
+                            .padding(.vertical, 20)
+                    }
                 }
                 
                 Section("보기 및 정답 체크") {
@@ -52,7 +60,7 @@ struct QuizEditorView: View {
                             HStack {
                                 TextField("\(index + 1). 선택지를 입력하세요.", text: $answer[index])
                                     .autocorrectionDisabled()
-                                    .padding(.vertical, 8)
+                                    .padding(.vertical, 5)
                                 Button(action: {
                                     toggleAnswerSelection(at: index)
                                 }) {
@@ -71,6 +79,7 @@ struct QuizEditorView: View {
                                 }
                             }
                             .padding()
+                            Divider()
                         }
                         Button(action: addAnswer) {
                             HStack {
@@ -89,32 +98,15 @@ struct QuizEditorView: View {
                     }
                     .pickerStyle(.menu)
                     
-                    VStack(alignment: .leading, spacing: 10) {
-                        Text("카테고리")
-                        LazyVGrid(columns: [GridItem(.adaptive(minimum: 80))], spacing: 10) {
-                            ForEach(categories, id: \.self) { category in
-                                if category == "직접 추가하기..." {
-                                    Button(action: {
-                                        isShowingAlert = true
-                                    }) {
-                                        Image(systemName: "plus")
-                                            .frame(maxWidth: .infinity, minHeight: 20)
-                                    }
-                                    .buttonStyle(.bordered)
-                                } else {
-                                    Button(action: {
-                                        toggleCategorySelection(category)
-                                    }) {
-                                        Text(category)
-                                            .font(.system(size: 14))
-                                            .frame(maxWidth: .infinity, minHeight: 25)
-                                    }
-                                    .background(selectedCategories.contains(category) ? Color.accentColor : Color.secondary.opacity(0.2))
-                                    .foregroundColor(selectedCategories.contains(category) ? .white : .primary)
-                                    .cornerRadius(8)
-                                    .buttonStyle(.plain)
-                                }
-                            }
+                    Picker("카테고리", selection: $selectedCategory) {
+                        ForEach(categories, id: \.self) { category in
+                            Text(category)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                    .onChange(of: selectedCategory) { newValue in
+                        if newValue == "직접 추가하기..." {
+                            self.isShowingAlert = true
                         }
                     }
                 }
@@ -151,10 +143,11 @@ struct QuizEditorView: View {
                     Button("저장하기") {
                         print("--------------- 퀴즈 저장 정보 ---------------")
                         print("질문: \(question)")
+                        print("설명: \(description)")
                         print("보기 목록: \(answer)")
                         print("정답 인덱스: \(correctAnswerIndex)")
                         print("난이도: \(selectedDifficulty)")
-                        print("선택된 카테고리: \(selectedCategories)")
+                        print("선택된 카테고리: \(selectedCategory)")
                                 
                         if selectedMediaItems.isEmpty {
                             print("첨부된 미디어: 없음")
@@ -179,8 +172,10 @@ struct QuizEditorView: View {
             .alert("새 카테고리 추가", isPresented: $isShowingAlert) {
                 TextField("카테고리 이름", text: $newCategoryName)
                     .autocorrectionDisabled()
-                Button("추가", action: addNewCategories)
-                Button("취소", role: .cancel) { }
+                Button("추가", action: addNewCategory)
+                Button("취소", role: .cancel) {
+                    selectedCategory = categories.first ?? "iOS"
+                }
             } message: {
                 Text("추가할 카테고리의 이름을 입력해주세요.")
             }
@@ -230,21 +225,15 @@ struct QuizEditorView: View {
         correctAnswerIndex.removeAll()
     }
     
-    func toggleCategorySelection(_ category: String) {
-        if selectedCategories.contains(category) {
-            selectedCategories.remove(category)
-        } else {
-            selectedCategories.insert(category)
-        }
-    }
-    func addNewCategories() {
+    func addNewCategory() {
         let trimmedName = newCategoryName.trimmingCharacters(in: .whitespaces)
-            guard !trimmedName.isEmpty else {
-                return
-            }
-            categories.insert(trimmedName, at: categories.count - 1)
-            selectedCategories.insert(trimmedName)
-            newCategoryName = ""
+        guard !trimmedName.isEmpty else {
+            return
+        }
+        
+        categories.insert(trimmedName, at: categories.count - 1)
+        selectedCategory = trimmedName
+        newCategoryName = ""
     }
     
     @ViewBuilder
