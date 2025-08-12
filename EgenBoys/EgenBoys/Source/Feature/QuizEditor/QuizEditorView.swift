@@ -87,6 +87,8 @@ struct QuizEditorView: View {
                                 Text("보기 추가")
                             }
                         }
+                        .buttonStyle(.plain)
+                        .foregroundColor(.blue)
                     }
                 }
                 
