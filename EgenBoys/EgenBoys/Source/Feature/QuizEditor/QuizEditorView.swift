@@ -2,7 +2,7 @@
 //  QuizEditorView.swift
 //  EgenBoys
 //
-//  Created by 구현모 on 8/11/25.
+//  Created by 구현모 on 8/12/25.
 //
 
 import SwiftUI
@@ -149,7 +149,22 @@ struct QuizEditorView: View {
                 
                 Section {
                     Button("저장하기") {
-                        
+                        print("--------------- 퀴즈 저장 정보 ---------------")
+                        print("질문: \(question)")
+                        print("보기 목록: \(answer)")
+                        print("정답 인덱스: \(correctAnswerIndex)")
+                        print("난이도: \(selectedDifficulty)")
+                        print("선택된 카테고리: \(selectedCategories)")
+                                
+                        if selectedMediaItems.isEmpty {
+                            print("첨부된 미디어: 없음")
+                        } else {
+                            print("첨부된 미디어: \(selectedMediaItems.count)개")
+                            for (index, media) in selectedMediaItems.enumerated() {
+                                print("  - 미디어 \(index + 1): 타입 \(media.type), 데이터 \(media.data.count) 바이트")
+                            }
+                        }
+                        print("-------------------------------------------")
                     }
                     .frame(minWidth: 0, maxWidth: .infinity)
                     .padding()
@@ -163,6 +178,7 @@ struct QuizEditorView: View {
             .navigationBarTitleDisplayMode(.inline)
             .alert("새 카테고리 추가", isPresented: $isShowingAlert) {
                 TextField("카테고리 이름", text: $newCategoryName)
+                    .autocorrectionDisabled()
                 Button("추가", action: addNewCategories)
                 Button("취소", role: .cancel) { }
             } message: {
