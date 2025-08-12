@@ -38,8 +38,8 @@ struct StartQuizView: View {
                 }
                 
                 NavigationLink {
-                    // 실제 데이터 연동 전: UI 확인용 더미 세션
-                    QuizSessionView()
+                    //🌸여기 바꿈 실제 데이터 연동 전: UI 확인용 더미 세션
+                  QuizSessionView(questions: QuizQuestion.sample)
                 } label: {
                     Text("시작하기")
                         .fontWeight(.semibold)
