@@ -24,7 +24,7 @@ struct QuizEditorView: View {
     @State private var difficulty: [String] = ["쉬움", "보통", "어려움"]
     @State private var selectedDifficulty: String = "보통"
     
-    @State private var categories: [String] = ["iOS", "Design", "CS", "직접 추가하기..."]
+    @State private var categories: [String] = QuizCategory.allCases.filter { $0 != .all}.map { $0.rawValue } + ["직접 추가하기..."]
     @State private var selectedCategory: String = "iOS"
     @State private var newCategoryName: String = ""
     @State private var isShowingAlert: Bool = false
