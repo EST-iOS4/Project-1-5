@@ -230,6 +230,7 @@ struct QuizEditorView: View {
     func addNewCategory() {
         let trimmedName = newCategoryName.trimmingCharacters(in: .whitespaces)
         guard !trimmedName.isEmpty else {
+            selectedCategory = categories.first ?? "iOS"
             return
         }
         
