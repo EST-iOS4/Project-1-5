@@ -13,19 +13,31 @@ struct QuizDetailView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
-                if let imageURL = item.imageURL {
-                    AsyncImage(url: imageURL) { image in
-                        image.resizable()
-                            .scaledToFill()
-                            .frame(width: UIScreen.main.bounds.width - 40, height: 200)
-                            .clipShape(RoundedRectangle(cornerRadius: 15))
-                            .shadow(radius: 10)
-                    } placeholder: {
-                        ProgressView()
-                            .progressViewStyle(CircularProgressViewStyle(tint: .blue))
-                            .scaleEffect(1.5)
+                Group {
+                    if let imageURL = item.imageURL {
+                        AsyncImage(url: imageURL) { phase in
+                            switch phase {
+                            case .empty:
+                                ProgressView()
+                                    .progressViewStyle(CircularProgressViewStyle(tint: .blue))
+                                    .scaleEffect(1.5)
+                                    .frame(width: UIScreen.main.bounds.width - 40, height: 200)
+                            case .success(let image):
+                                image.resizable()
+                                    .scaledToFill()
+                                    .frame(width: UIScreen.main.bounds.width - 40, height: 200)
+                                    .clipShape(RoundedRectangle(cornerRadius: 15))
+                                    .shadow(radius: 10)
+                            case .failure(_):
+                                placeholderImage
+                            @unknown default:
+                                placeholderImage
+                            }
+                        }
+                        .frame(width: UIScreen.main.bounds.width - 40, height: 200)
+                    } else {
+                        placeholderImage
                     }
-                    .padding(.horizontal)
                 }
                 
                 Text(item.title)
@@ -69,5 +81,19 @@ struct QuizDetailView: View {
         }
         .navigationBarTitle("퀴즈 상세", displayMode: .inline)
     }
+    
+    private var placeholderImage: some View {
+        Image(systemName: "photo")
+            .resizable()
+            .scaledToFit()
+            .frame(width: UIScreen.main.bounds.width - 40, height: 200)
+            .foregroundColor(.gray.opacity(0.5))
+            .background(
+                RoundedRectangle(cornerRadius: 15)
+                    .fill(Color.gray.opacity(0.2))
+            )
+            .shadow(radius: 10)
+    }
 }
+
 
