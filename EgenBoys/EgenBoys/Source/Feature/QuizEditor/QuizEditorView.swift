@@ -207,7 +207,7 @@ struct QuizEditorView: View {
             .ignoresSafeArea(.keyboard, edges: .bottom)
         }
     }
-        
+    
     func addAnswer() {
         newQuestion.answerOptions.append(AnswerOption())
     }

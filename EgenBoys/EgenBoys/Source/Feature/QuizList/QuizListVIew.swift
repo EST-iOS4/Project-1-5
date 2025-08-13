@@ -30,7 +30,8 @@ struct QuizListView: View {
                     }
                 }
                 .listRowInsets(EdgeInsets(top: .zero, leading: .zero, bottom: .zero, trailing: 15))
-            }.animation(.easeInOut, value: selectedCategory)
+            }
+            .animation(.easeInOut, value: selectedCategory)
             
             /// TODO: - SwiftData MockData추가를 위한 버튼, 이후 삭제 예정
             Button("데이터 추가하기") {
