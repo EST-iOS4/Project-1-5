@@ -8,13 +8,6 @@
 import SwiftUI
 import SwiftData
 
-enum QuizCategory: String, Codable, CaseIterable {
-    case all = "모든 퀴즈"
-    case ios = "iOS"
-    case design = "Design"
-    case cs = "CS"
-}
-
 struct QuizListView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var quizList: [Quiz]
@@ -69,7 +62,7 @@ struct QuizListView: View {
             category: .ios,
             questions: [question1, question2, question3],
             imageURL: URL(string: "https://images.unsplash.com/photo-1542736637-74169a802172?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mjh8fCVFQSVCNyU4MCVFQyU5NyVBQyVFQyU5QSVCNCUyMCVFQiU5RSU5OCVFQyU4NCU5QyVFRCU4QyU5MCVFQiU4QiVBNHxlbnwwfHwwfHx8MA%3D%3D"),
-            videoURL: URL(string: "https://www.youtube.com/watch?v=dQw4w9WgXcQ")
+            videoURL: URL(string: "https://www.youtube.com/watch?v=dQw4w9WgXcQ"), difficultty: .easy
         )
         
         let quiz2 = Quiz(
@@ -78,7 +71,7 @@ struct QuizListView: View {
             category: .design,
             questions: [question4, question5],
             imageURL: URL(string: "https://images.unsplash.com/photo-1593085512500-5d55148d6f0d?w=1400&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8JUVDJUJBJTkwJUVCJUE2JUFEJUVEJTg0JUIwfGVufDB8fDB8fHww"),
-            videoURL: URL(string: "https://www.youtube.com/watch?v=khWf78gd8G4")
+            videoURL: URL(string: "https://www.youtube.com/watch?v=khWf78gd8G4"), difficultty: .medium
         )
         
         let quiz3 = Quiz(
@@ -87,7 +80,7 @@ struct QuizListView: View {
             category: .ios,
             questions: [question1, question2, question6],
             imageURL: URL(string: "https://images.unsplash.com/photo-1615946027884-5b6623222bf4?w=1400&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8JUVDJUJBJTkwJUVCJUE2JUFEJUVEJTg0JUIwfGVufDB8fDB8fHww"),
-            videoURL: URL(string: "https://www.youtube.com/watch?v=vJ0KNpMjTmI")
+            videoURL: URL(string: "https://www.youtube.com/watch?v=vJ0KNpMjTmI"), difficultty: .hard
         )
         
         let quiz4 = Quiz(
@@ -96,7 +89,7 @@ struct QuizListView: View {
             category: .design,
             questions: [question3, question7],
             imageURL: URL(string: "https://images.unsplash.com/photo-1618336753974-aae8e04506aa?w=1400&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OHx8JUVDJUJBJTkwJUVCJUE2JUFEJUVEJTg0JUIwfGVufDB8fDB8fHww"),
-            videoURL: URL(string: "https://www.youtube.com/watch?v=aLV9E0J0Q9Y")
+            videoURL: URL(string: "https://www.youtube.com/watch?v=aLV9E0J0Q9Y"), difficultty: .easy
         )
         
         let quiz5 = Quiz(
@@ -105,7 +98,7 @@ struct QuizListView: View {
             category: .design,
             questions: [question4],
             imageURL: URL(string: "https://images.unsplash.com/photo-1638803040283-7a5ffd48dad5?w=1400&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTB8fCVFQyVCQSU5MCVFQiVBNiVBRCVFRCU4NCVCMHxlbnwwfHwwfHx8MA%3D%3D"),
-            videoURL: URL(string: "https://www.youtube.com/watch?v=QH2-TGUlwu4")
+            videoURL: URL(string: "https://www.youtube.com/watch?v=QH2-TGUlwu4"), difficultty: .medium
         )
         
         let quiz6 = Quiz(
@@ -114,7 +107,7 @@ struct QuizListView: View {
             category: .cs,
             questions: [question5],
             imageURL: URL(string: "https://images.unsplash.com/photo-1563823251941-b9989d1e8d97?w=1400&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTJ8fCVFQyVCQSU5MCVFQiVBNiVBRCVFRCU4NCVCMHxlbnwwfHwwfHx8MA%3D%3D"),
-            videoURL: URL(string: "https://www.youtube.com/watch?v=f4HSe27H7Zc")
+            videoURL: URL(string: "https://www.youtube.com/watch?v=f4HSe27H7Zc"), difficultty: .hard
         )
         
         let quiz7 = Quiz(
@@ -123,7 +116,7 @@ struct QuizListView: View {
             category: .cs,
             questions: [question6],
             imageURL: URL(string: "https://images.unsplash.com/photo-1637164011965-635d3e762a38?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OHx8JUVEJThGJUFDJUVDJUJDJTkzJUVCJUFBJUFDfGVufDB8fDB8fHww"),
-            videoURL: URL(string: "https://www.youtube.com/watch?v=hdv4-FMmrpg")
+            videoURL: URL(string: "https://www.youtube.com/watch?v=hdv4-FMmrpg"), difficultty: .easy
         )
         
         let quiz8 = Quiz(
@@ -132,7 +125,7 @@ struct QuizListView: View {
             category: .design,
             questions: [question3],
             imageURL: URL(string: "https://images.unsplash.com/photo-1609372332255-611485350f25?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTB8fCVFRCU4RiVBQyVFQyVCQyU5MyVFQiVBQSVBQ3xlbnwwfHwwfHx8MA%3D%3D"),
-            videoURL: URL(string: "https://www.youtube.com/watch?v=aLV9E0J0Q9Y")
+            videoURL: URL(string: "https://www.youtube.com/watch?v=aLV9E0J0Q9Y"), difficultty: .medium
         )
         
         let quiz9 = Quiz(
@@ -141,7 +134,7 @@ struct QuizListView: View {
             category: .cs,
             questions: [question1],
             imageURL: URL(string: "https://images.unsplash.com/photo-1605979257913-1704eb7b6246?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTF8fCVFRCU4RiVBQyVFQyVCQyU5MyVFQiVBQSVBQ3xlbnwwfHwwfHx8MA%3D%3D"),
-            videoURL: URL(string: "https://www.youtube.com/watch?v=tvuwL0xrwZI")
+            videoURL: URL(string: "https://www.youtube.com/watch?v=tvuwL0xrwZI"), difficultty: .hard
         )
         
         let quiz10 = Quiz(
@@ -150,7 +143,7 @@ struct QuizListView: View {
             category: .ios,
             questions: [question2],
             imageURL: URL(string: "https://images.unsplash.com/photo-1530041539828-114de669390e?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MjR8fCVFQSVCNyU4MCVFQyU5NyVBQyVFQyU5QSVCNHxlbnwwfHwwfHx8MA%3D%3D"),
-            videoURL: URL(string: "https://www.youtube.com/watch?v=hdv4-FMmrpg")
+            videoURL: URL(string: "https://www.youtube.com/watch?v=hdv4-FMmrpg"), difficultty: .easy
         )
         
         do {
