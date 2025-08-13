@@ -113,6 +113,14 @@ struct QuizEditorView: View {
                 }
                 
                 Section("보기 및 정답 체크") {
+                    HStack {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundStyle(.blue)
+                        Text("정답으로 사용할 보기를 체크해주세요.")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                        Spacer()
+                    }
                     VStack {
                         ForEach(newQuestion.answerOptions.indices, id: \.self) { index in
                             AnswerOptionRowView(
@@ -192,6 +200,7 @@ struct QuizEditorView: View {
                 }
                 .listRowInsets(EdgeInsets()) // 버튼 바깥 여백 제거
             }
+            .listRowInsets(EdgeInsets(top: .zero, leading: .zero, bottom: .zero, trailing: .zero))
             .navigationTitle("퀴즈 등록 / 편집")
             .navigationBarTitleDisplayMode(.inline)
             .onChange(of: selectedPhotoItems) { newItems in
