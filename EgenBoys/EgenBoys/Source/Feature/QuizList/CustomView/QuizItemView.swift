@@ -7,17 +7,8 @@
 
 import SwiftUI
 
-struct QuizItem: Identifiable {
-    let id = UUID()
-    let title: String
-    let description: String
-    let imageURL: URL?
-    let videoURL: URL?
-    var category: QuizCategory
-}
-
 struct QuizItemView: View {
-    let item: QuizItem
+    let item: Quiz
     
     var body: some View {
         HStack {
@@ -41,7 +32,7 @@ struct QuizItemView: View {
                     .font(.headline)
                     .foregroundColor(.primary)
                 
-                Text(item.description)
+                Text(item.explanation)
                     .font(.subheadline)
                     .foregroundColor(.gray)
             }
