@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import SwiftData
 
 @main
 struct EgenBoysApp: App {
@@ -13,5 +14,6 @@ struct EgenBoysApp: App {
         WindowGroup {
             MainTabView()
         }
+        .modelContainer(for: [Quiz.self, Question.self])
     }
 }
