@@ -9,9 +9,13 @@ import SwiftUI
 
 @main
 struct EgenBoysApp: App {
+    @StateObject private var settingsViewModel = SettingsViewModel()
+    
     var body: some Scene {
         WindowGroup {
             MainTabView()
+                .environmentObject(settingsViewModel)
+                .preferredColorScheme(settingsViewModel.isDarkMode ? .dark : .light)
         }
     }
 }

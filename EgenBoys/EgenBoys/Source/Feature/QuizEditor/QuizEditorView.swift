@@ -26,7 +26,7 @@ struct AnswerOption: Identifiable {
     var isCorrect: Bool = false
 }
 
-struct Question {
+struct createQuestion {
     var questionText: String = ""
     var description: String = ""
     var answerOptions: [AnswerOption] = [
@@ -38,7 +38,7 @@ struct Question {
 }
 
 struct QuizEditorView: View {
-    @State private var newQuestion = Question()
+    @State private var newQuestion = createQuestion()
     
     @State private var selectedDifficulty: Difficulty = .medium
     
