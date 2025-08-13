@@ -31,7 +31,46 @@ struct CreateQuestion {
     ]
 }
 
+struct AnswerOptionRowView: View {
+    @Binding var option: AnswerOption
+    
+    let index: Int
+    let totalCount: Int
+    let onDelete: () -> Void
+    
+    var body: some View {
+        HStack {
+            Text("\(index + 1).")
+                .foregroundColor(.gray)
+            
+            TextField("선택지를 입력하세요.", text: $option.text)
+                .autocorrectionDisabled()
+                .padding(.vertical, 5)
+            
+            Button(action: {
+                option.isCorrect.toggle()
+            }) {
+                Image(systemName: option.isCorrect ? "checkmark.square.fill" : "square")
+            }
+            .buttonStyle(.plain)
+            
+            if totalCount > 2 {
+                Button(action: onDelete) {
+                    Image(systemName: "trash")
+                        .foregroundColor(.red)
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding()
+        Divider()
+    }
+}
+
 struct QuizEditorView: View {
+    @Environment(\.modelContext) private var modelContext
+    @Environment(\.dismiss) private var dismiss
+    
     @State private var newQuestion = CreateQuestion()
     
     @State private var selectedDifficulty: Difficulty = .medium
@@ -40,6 +79,8 @@ struct QuizEditorView: View {
     
     @State private var selectedPhotoItems: [PhotosPickerItem] = []
     @State private var selectedMediaItems: [MediaItem] = []
+    
+    @State private var isShowingSaveAlert = false
     
     struct MediaItem: Identifiable {
         let id = UUID()
@@ -65,34 +106,15 @@ struct QuizEditorView: View {
                 
                 Section("보기 및 정답 체크") {
                     VStack {
-                        ForEach($newQuestion.answerOptions) { $option in
-                            HStack {
-                                if let index = newQuestion.answerOptions.firstIndex(where: { $0.id == option.id }) {
-                                    Text("\(index + 1).")
-                                        .foregroundColor(.gray)
+                        ForEach(newQuestion.answerOptions.indices, id: \.self) { index in
+                            AnswerOptionRowView(
+                                option: $newQuestion.answerOptions[index],
+                                index: index,
+                                totalCount: newQuestion.answerOptions.count,
+                                onDelete: {
+                                    removeAnswer(at: index)
                                 }
-                                TextField("선택지를 입력하세요.", text: $option.text)
-                                    .autocorrectionDisabled()
-                                    .padding(.vertical, 5)
-                                Button(action: {
-                                    option.isCorrect.toggle()
-                                }) {
-                                    Image(systemName: option.isCorrect ? "checkmark.square.fill" : "square")
-                                }
-                                .buttonStyle(.plain)
-                                
-                                if newQuestion.answerOptions.count > 2 {
-                                    Button(action: {
-                                        removeAnswer(option: option)
-                                    }) {
-                                        Image(systemName: "trash")
-                                            .foregroundColor(.red)
-                                    }
-                                    .buttonStyle(.plain)
-                                }
-                            }
-                            .padding()
-                            Divider()
+                            )
                         }
                         Button(action: addAnswer) {
                             HStack {
@@ -151,22 +173,7 @@ struct QuizEditorView: View {
                 
                 Section {
                     Button("저장하기") {
-                        print("--------------- 퀴즈 저장 정보 ---------------")
-                        print("질문: \(newQuestion.questionText)")
-                        print("설명: \(newQuestion.description)")
-                        print("보기 목록: \(newQuestion.answerOptions.map { ($0.text, $0.isCorrect) })")
-                        print("난이도: \(selectedDifficulty)")
-                        print("선택된 카테고리: \(selectedCategory)")
-                                
-                        if selectedMediaItems.isEmpty {
-                            print("첨부된 미디어: 없음")
-                        } else {
-                            print("첨부된 미디어: \(selectedMediaItems.count)개")
-                            for (index, media) in selectedMediaItems.enumerated() {
-                                print("  - 미디어 \(index + 1): 타입 \(media.type), 데이터 \(media.data.count) 바이트")
-                            }
-                        }
-                        print("-------------------------------------------")
+                        saveQuiz()
                     }
                     .frame(minWidth: 0, maxWidth: .infinity)
                     .padding()
@@ -192,7 +199,6 @@ struct QuizEditorView: View {
                     for item in newItems {
                         guard let data = try? await item.loadTransferable(type: Data.self) else { continue }
                         if item.supportedContentTypes.first(where: { $0.conforms(to: .movie) }) != nil {
-                            // 영상은 미디어타입을 video로 지정
                             let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent("\(UUID().uuidString).mp4")
                             try? data.write(to: tempURL)
                             let newMediaItem = MediaItem(type: .video, data: data, previewURL: tempURL)
@@ -206,13 +212,73 @@ struct QuizEditorView: View {
             }
             .ignoresSafeArea(.keyboard, edges: .bottom)
         }
+        .alert("저장 완료", isPresented: $isShowingSaveAlert) {
+            Button("확인") {
+                dismiss()
+            }
+        } message: {
+            Text("퀴즈가 저장되었습니다.")
+        }
     }
         
     func addAnswer() {
         newQuestion.answerOptions.append(AnswerOption())
     }
-    func removeAnswer(option: AnswerOption) {
-        newQuestion.answerOptions.removeAll { $0.id == option.id }
+    func removeAnswer(at index: Int) {
+        newQuestion.answerOptions.remove(at: index)
+    }
+    
+    private func saveQuiz() {
+        let questionsForSwiftData: [Question] = newQuestion.answerOptions.map { option in
+            return Question(content: option.text, isCorrect: option.isCorrect)
+        }
+        let (imageURL, videoURL) = saveMediaFiles()
+        
+        let newQuizForSwiftData = Quiz(
+            title: newQuestion.questionText,
+            explanation: newQuestion.description,
+            category: selectedCategory,
+            questions: questionsForSwiftData,
+            imageURL: imageURL,
+            videoURL: videoURL,
+            difficultty: selectedDifficulty
+        )
+        
+        modelContext.insert(newQuizForSwiftData)
+        do {
+            try modelContext.save()
+            print("퀴즈 저장 완료.")
+            isShowingSaveAlert = true
+        } catch {
+            print("퀴즈 저장 실패: \(error)")
+        }
+    }
+    private func saveMediaFiles() -> (imageURL: URL?, videoURL: URL?) {
+        var savedImageURL: URL?
+        var savedVideoURL: URL?
+        
+        guard let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
+            return (nil, nil)
+        }
+        
+        for mediaItem in selectedMediaItems {
+            let fileExtension = (mediaItem.type == .image) ? "jpg" : "mp4"
+            let fileName = "\(UUID().uuidString).\(fileExtension)"
+            let fileURL = documentsDirectory.appendingPathComponent(fileName)
+            
+            do {
+                try mediaItem.data.write(to: fileURL)
+                
+                if mediaItem.type == .image {
+                    savedImageURL = fileURL
+                } else {
+                    savedVideoURL = fileURL
+                }
+            } catch {
+                print("미디어 저장 실패: \(error)")
+            }
+        }
+        return (savedImageURL, savedVideoURL)
     }
     
     @ViewBuilder
@@ -237,7 +303,6 @@ struct QuizEditorView: View {
         }
         .frame(maxWidth: .infinity)
     }
-    
 }
 
 #Preview {
