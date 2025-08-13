@@ -14,19 +14,13 @@ enum MediaType {
     case video
 }
 
-enum Difficulty: String, CaseIterable {
-    case easy = "쉬움"
-    case medium = "보통"
-    case hard = "어려움"
-}
-
 struct AnswerOption: Identifiable {
     let id = UUID()
     var text: String = ""
     var isCorrect: Bool = false
 }
 
-struct Question {
+struct CreateQuestion {
     var questionText: String = ""
     var description: String = ""
     var answerOptions: [AnswerOption] = [
@@ -38,7 +32,7 @@ struct Question {
 }
 
 struct QuizEditorView: View {
-    @State private var newQuestion = Question()
+    @State private var newQuestion = CreateQuestion()
     
     @State private var selectedDifficulty: Difficulty = .medium
     
