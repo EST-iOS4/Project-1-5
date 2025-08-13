@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct QuizDetailView: View {
-    let item: QuizItem
+    let item: Quiz
     
     var body: some View {
         ScrollView {
@@ -36,7 +36,7 @@ struct QuizDetailView: View {
                     .lineLimit(.max)
                     .multilineTextAlignment(.center)
                 
-                Text(item.description)
+                Text(item.explanation)
                     .font(.body)
                     .foregroundColor(.secondary)
                     .padding(.horizontal)
