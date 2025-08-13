@@ -6,9 +6,11 @@
 //
 
 import SwiftUI
+import AVKit
 
 struct QuizDetailView: View {
     let item: Quiz
+    @State var playingQuizID: UUID?
     
     var body: some View {
         ScrollView {
@@ -44,15 +46,29 @@ struct QuizDetailView: View {
                     .shadow(color: .black.opacity(0.1), radius: 5, x: 0, y: 2)
                     .padding(.top, 10)
                 
-                if let videoURL = item.videoURL {
-                    Link("Watch Video", destination: videoURL)
+                Button(action: {
+                    playingQuizID = item.id
+                }) {
+                    Text("동영상 보기")
                         .font(.headline)
                         .foregroundColor(.blue)
                         .padding()
                         .frame(maxWidth: .infinity)
                         .background(RoundedRectangle(cornerRadius: 10).stroke(Color.blue, lineWidth: 1))
-                        .padding(.top, 10)
                 }
+                .padding(.horizontal)
+                if playingQuizID == item.id {
+                    if let videoURL = item.videoURL {
+                        VideoPlayer(player: AVPlayer(url: videoURL))
+                            .frame(height: 200)
+                            .cornerRadius(15)
+                            .padding()
+                            .onTapGesture {
+                                playingQuizID = nil
+                            }
+                    }
+                }
+                        
             }
             .padding(.top, 20)
             .padding(.bottom, 40)
