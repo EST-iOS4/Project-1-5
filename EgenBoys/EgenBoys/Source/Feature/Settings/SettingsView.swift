@@ -18,7 +18,11 @@ struct SettingsView: View {
         NavigationStack {
             Form {
                 Section("테마 설정") {
-                    Toggle("다크 모드", isOn: $settings.isDarkMode)
+                    Picker("테마", selection: $settings.themeMode) {
+                        ForEach(ThemeMode.allCases, id: \.self) { mode in
+                            Text(mode.rawValue)
+                        }
+                    }
                 }
                 Section(header: Text("폰트 크기")) {
                     Slider(value: $temporaryFontSize, in: 12...24, step: 1)
@@ -56,7 +60,7 @@ struct SettingsPreviewWrapper: View {
     var body: some View {
         SettingsView()
             .environmentObject(settingsViewModel)
-            .preferredColorScheme(settingsViewModel.isDarkMode ? .dark : .light)
+            .preferredColorScheme(settingsViewModel.colorScheme)
     }
 }
 #Preview {

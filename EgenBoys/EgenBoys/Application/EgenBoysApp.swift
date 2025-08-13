@@ -16,7 +16,7 @@ struct EgenBoysApp: App {
         WindowGroup {
             MainTabView()
                 .environmentObject(settingsViewModel)
-                .preferredColorScheme(settingsViewModel.isDarkMode ? .dark : .light)
+                .preferredColorScheme(settingsViewModel.colorScheme)
         }
         .modelContainer(for: [Quiz.self, Question.self])
     }
