@@ -100,7 +100,7 @@ struct QuizSummaryScoreView: View {
                 Button {
                     onClose()
                 } label: {
-                    Text("닫기")
+                    Text("새로운 문제 시도하기")
                         .frame(maxWidth: .infinity)
                         .padding()
                         .background(Color.blue)
