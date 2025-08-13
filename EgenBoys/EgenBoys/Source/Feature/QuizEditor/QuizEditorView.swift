@@ -82,6 +82,13 @@ struct QuizEditorView: View {
     
     @State private var isShowingSaveAlert = false
     
+    private var isSaveButtonDisabled: Bool {
+        let isQuestionEmpty = newQuestion.questionText.trimmingCharacters(in: .whitespaces).isEmpty
+        let areAnyOptionsEmpty = newQuestion.answerOptions.contains { option in option.text.trimmingCharacters(in: .whitespaces).isEmpty
+        }
+        return isQuestionEmpty || areAnyOptionsEmpty
+    }
+    
     struct MediaItem: Identifiable {
         let id = UUID()
         let type: MediaType
@@ -177,9 +184,10 @@ struct QuizEditorView: View {
                     }
                     .frame(minWidth: 0, maxWidth: .infinity)
                     .padding()
-                    .background(Color.blue)
+                    .background(isSaveButtonDisabled ? Color.gray : Color.blue)
                     .foregroundColor(.white)
                     .cornerRadius(8)
+                    .disabled(isSaveButtonDisabled)
                 }
                 .listRowInsets(EdgeInsets()) // 버튼 바깥 여백 제거
             }
