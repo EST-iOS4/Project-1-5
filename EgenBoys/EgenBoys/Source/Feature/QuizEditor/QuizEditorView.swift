@@ -174,11 +174,10 @@ struct QuizEditorView: View {
                 Section {
                     ForEach($selectedMediaItems) { $item in
                         HStack {
-                            Spacer()
                             mediaPreview(item: item)
                                 .buttonStyle(.plain)
                                 .foregroundColor(.red)
-                            Spacer()
+                                .padding()
                         }
                     }
                     
@@ -320,30 +319,32 @@ struct QuizEditorView: View {
     
     @ViewBuilder
     private func mediaPreview(item: MediaItem) -> some View {
-            if item.type == .image, let uiImage = UIImage(data: item.data) {
-                Image(uiImage: uiImage)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(maxHeight: 200)
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
+        if item.type == .image, let uiImage = UIImage(data: item.data) {
+            Image(uiImage: uiImage)
+                .resizable()
+                .scaledToFill()
+                .frame(maxHeight: 200)
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .overlay(alignment: .topTrailing) {
+                    deleteButton(for: item)
+                        .offset(x: 14, y: -14)
+                }
+        } else if item.type == .video {
+            if let url = item.previewURL {
+                VideoPlayer(player: AVPlayer(url: url))
+                    .frame(height: 200)
+                    .cornerRadius(12)
                     .overlay(alignment: .topTrailing) {
                         deleteButton(for: item)
+                            .offset(x: 14, y: -14)
                     }
-            } else if item.type == .video {
-                if let url = item.previewURL {
-                    VideoPlayer(player: AVPlayer(url: url))
-                        .frame(height: 200)
-                        .cornerRadius(12)
-                        .overlay(alignment: .topTrailing) {
-                            deleteButton(for: item)
-                        }
-                } else {
-                    ProgressView()
-                        .frame(height: 200)
-                }
+            } else {
+                ProgressView()
+                    .frame(height: 200)
             }
+        }
     }
-    
+
     private func deleteButton(for item: MediaItem) -> some View {
         Button(action: {
             if let index = selectedMediaItems.firstIndex(where: { $0.id == item.id }) {
@@ -353,13 +354,16 @@ struct QuizEditorView: View {
                 selectedMediaItems.remove(at: index)
             }
         }) {
-                Image(systemName: "xmark.circle.fill")
-                    .foregroundColor(.red)
-                    .clipShape(Circle())
+            Image(systemName: "xmark")
+                .foregroundColor(.white)
+                .frame(width: 28, height: 28)
+                .background(Color.red)
+                .clipShape(Circle())
+                .shadow(radius: 2)
         }
         .buttonStyle(.plain)
-        .padding(8)
     }
+
 }
 
 #Preview {
