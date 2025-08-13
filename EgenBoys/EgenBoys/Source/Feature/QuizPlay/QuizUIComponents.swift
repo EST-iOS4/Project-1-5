@@ -7,47 +7,34 @@
 
 import SwiftUI
 
-// 등록 화면 톤과 맞춘 카드 섹션 (기존과 동일)
+// 그대로 쓰던 섹션 카드
 struct SectionCard<Content: View>: View {
     let title: String
     @ViewBuilder var content: Content
-    
     init(_ title: String, @ViewBuilder content: () -> Content) {
-        self.title = title
-        self.content = content()
+        self.title = title; self.content = content()
     }
-    
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(title)
-                .font(.footnote)
-                .foregroundStyle(.secondary)
-                .padding(.horizontal, 4)
-            VStack(spacing: 0) {
-                content
-                    .padding(14)
-            }
-            .background(.ultraThinMaterial)
-            .clipShape(RoundedRectangle(cornerRadius: 16))
+            Text(title).font(.footnote).foregroundStyle(.secondary).padding(.horizontal, 4)
+            VStack(spacing: 0) { content.padding(14) }
+                .background(.ultraThinMaterial)
+                .clipShape(RoundedRectangle(cornerRadius: 16))
         }
     }
 }
 
-// 보기 피드백 상태
-enum ChoiceFeedback {
-    case correct   // 정답 = 초록
-    case wrong     // 선택한 오답 = 빨강
-    case dimmed    // 정답 공개 후 나머지 = 흐리게
-}
+// ✅ 새로 추가되는 피드백 상태
+enum ChoiceFeedback { case correct, wrong, dimmed }
 
-// 체크박스 옵션 셀 (피드백 색상 지원)
+// ✅ 체크박스(피드백 지원 버전) — 이걸로 교체!
 struct CheckboxRow: View {
     let index: Int
     let text: String
     let isSelected: Bool
-    var feedback: ChoiceFeedback? = nil   // ← 새 파라미터(기본값 nil: 기존 화면 영향 없음)
-    
-    private var strokeColor: Color {
+    var feedback: ChoiceFeedback? = nil   // ← 추가된 파라미터(기본값 있어서 기존 화면 영향 X)
+
+    private var stroke: Color {
         switch feedback {
         case .correct: return .green
         case .wrong:   return .red
@@ -55,8 +42,7 @@ struct CheckboxRow: View {
         case .none:    return isSelected ? .blue : Color.secondary.opacity(0.35)
         }
     }
-    
-    private var bgColor: Color {
+    private var bg: Color {
         switch feedback {
         case .correct: return Color.green.opacity(0.12)
         case .wrong:   return Color.red.opacity(0.12)
@@ -64,32 +50,20 @@ struct CheckboxRow: View {
         case .none:    return Color(.systemBackground)
         }
     }
-    
-    private var textColor: Color {
-        switch feedback {
-        case .dimmed: return .secondary
-        default:      return .primary
-        }
-    }
-    
+    private var txt: Color { feedback == .dimmed ? .secondary : .primary }
+
     var body: some View {
         HStack {
-            Text("\(index). \(text)")
-                .foregroundStyle(textColor)
-                .frame(maxWidth: .infinity, alignment: .leading)
+            Text("\(index). \(text)").foregroundStyle(txt).frame(maxWidth: .infinity, alignment: .leading)
             ZStack {
-                RoundedRectangle(cornerRadius: 6)
-                    .strokeBorder(strokeColor, lineWidth: 2)
-                    .frame(width: 26, height: 26)
+                RoundedRectangle(cornerRadius: 6).strokeBorder(stroke, lineWidth: 2).frame(width: 26, height: 26)
                 if isSelected {
-                    Image(systemName: "checkmark")
-                        .font(.system(size: 14, weight: .bold))
-                        .foregroundStyle(strokeColor)
+                    Image(systemName: "checkmark").font(.system(size: 14, weight: .bold)).foregroundStyle(stroke)
                 }
             }
         }
         .padding(12)
-        .background(bgColor)
+        .background(bg)
         .clipShape(RoundedRectangle(cornerRadius: 12))
     }
 }
