@@ -2,7 +2,7 @@
 //  QuizEditorView.swift
 //  EgenBoys
 //
-//  Created by 구현모 on 8/12/25.
+//  Created by 구현모 on 8/13/25.
 //
 
 import SwiftUI
@@ -87,7 +87,7 @@ struct QuizEditorView: View {
         let areAnyOptionsEmpty = newQuestion.answerOptions.contains { option in option.text.trimmingCharacters(in: .whitespaces).isEmpty
         }
         let isNoAnswerChecked = !newQuestion.answerOptions.contains { $0.isCorrect }
-        return isQuestionEmpty || areAnyOptionsEmpty
+        return isQuestionEmpty || areAnyOptionsEmpty || isNoAnswerChecked
     }
     
     struct MediaItem: Identifiable {
@@ -223,6 +223,7 @@ struct QuizEditorView: View {
         }
         .alert("저장 완료", isPresented: $isShowingSaveAlert) {
             Button("확인") {
+                resetInputs()
                 dismiss()
             }
         } message: {
@@ -288,6 +289,14 @@ struct QuizEditorView: View {
             }
         }
         return (savedImageURL, savedVideoURL)
+    }
+    private func resetInputs() {
+        newQuestion = CreateQuestion()
+        
+        selectedDifficulty = .medium
+        selectedCategory = .ios
+        selectedPhotoItems = []
+        selectedMediaItems = []
     }
     
     @ViewBuilder
