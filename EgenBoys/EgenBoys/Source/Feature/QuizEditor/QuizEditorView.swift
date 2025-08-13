@@ -86,6 +86,7 @@ struct QuizEditorView: View {
         let isQuestionEmpty = newQuestion.questionText.trimmingCharacters(in: .whitespaces).isEmpty
         let areAnyOptionsEmpty = newQuestion.answerOptions.contains { option in option.text.trimmingCharacters(in: .whitespaces).isEmpty
         }
+        let isNoAnswerChecked = !newQuestion.answerOptions.contains { $0.isCorrect }
         return isQuestionEmpty || areAnyOptionsEmpty
     }
     
