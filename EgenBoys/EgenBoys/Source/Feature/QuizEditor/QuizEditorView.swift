@@ -39,13 +39,13 @@ struct AnswerOptionRowView: View {
     let onDelete: () -> Void
     
     var body: some View {
-        HStack {
+        HStack(alignment: .center) {
             Text("\(index + 1).")
                 .foregroundColor(.gray)
             
             TextField("선택지를 입력하세요.", text: $option.text)
                 .autocorrectionDisabled()
-                .padding(.vertical, 5)
+                .padding(.vertical, 10)
             
             Button(action: {
                 option.isCorrect.toggle()
@@ -62,7 +62,6 @@ struct AnswerOptionRowView: View {
                 .buttonStyle(.plain)
             }
         }
-        .padding()
         Divider()
     }
 }
@@ -100,7 +99,7 @@ struct QuizEditorView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("문제 및 설명") {
+                Section {
                     VStack {
                         TextField("문제를 입력하세요.", text: $newQuestion.questionText, axis: .vertical)
                             .autocorrectionDisabled()
@@ -108,20 +107,25 @@ struct QuizEditorView: View {
                         Divider()
                         TextField("문제에 대한 설명을 입력하세요.", text: $newQuestion.description, axis: .vertical)
                             .autocorrectionDisabled()
-                            .padding(.vertical, 20)
+                            .padding(.vertical, 8)
                     }
+                } header: {
+                    Text("문제 및 설명")
+                        .padding(.leading, -12)
                 }
                 
-                Section("보기 및 정답 체크") {
-                    HStack {
-                        Image(systemName: "checkmark.circle.fill")
-                            .foregroundStyle(.blue)
-                        Text("정답으로 사용할 보기를 체크해주세요.")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                        Spacer()
-                    }
+                Section {
                     VStack {
+                        HStack {
+                            Image(systemName: "checkmark.circle.fill")
+                                .foregroundStyle(.blue)
+                            Text("정답으로 사용할 보기를 체크해주세요.")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                            Spacer()
+                        }
+                        .padding(.vertical, 8)
+                        
                         ForEach(newQuestion.answerOptions.indices, id: \.self) { index in
                             AnswerOptionRowView(
                                 option: $newQuestion.answerOptions[index],
@@ -138,12 +142,17 @@ struct QuizEditorView: View {
                                 Text("보기 추가")
                             }
                         }
+                        .padding(.vertical, 8)
                         .buttonStyle(.plain)
                         .foregroundColor(.blue)
                     }
+                } header: {
+                    Text("보기 및 정답")
+                        .padding(.leading, -8)
                 }
-                
-                Section("난이도 및 카테고리") {
+                .listRowInsets(EdgeInsets(top: .zero, leading: 15, bottom: .zero, trailing: 15))
+
+                Section {
                     Picker("난이도", selection: $selectedDifficulty) {
                         ForEach(Difficulty.allCases, id: \.self) { difficulty in
                             Text(difficulty.rawValue).tag(difficulty)
@@ -157,22 +166,20 @@ struct QuizEditorView: View {
                         }
                     }
                     .pickerStyle(.menu)
+                } header: {
+                    Text("난이도 및 카테고리")
+                        .padding(.leading, -12)
                 }
                 
-                Section("이미지 / 동영상 추가") {
+                Section {
                     ForEach($selectedMediaItems) { $item in
-                        mediaPreview(item: item)
-                        
-                        Button("삭제", role: .destructive) {
-                            if let index = selectedMediaItems.firstIndex(where: { $0.id == item.id }) {
-                                if let url = selectedMediaItems[index].previewURL {
-                                    try? FileManager.default.removeItem(at: url)
-                                }
-                                selectedMediaItems.remove(at: index)
-                            }
+                        HStack {
+                            Spacer()
+                            mediaPreview(item: item)
+                                .buttonStyle(.plain)
+                                .foregroundColor(.red)
+                            Spacer()
                         }
-                        .buttonStyle(.plain)
-                        .foregroundColor(.red)
                     }
                     
                     PhotosPicker(selection: $selectedPhotoItems,
@@ -185,6 +192,9 @@ struct QuizEditorView: View {
                         }
                         .foregroundColor(.accentColor)
                     }
+                } header: {
+                    Text("이미지 / 동영상 추가")
+                        .padding(.leading, -12)
                 }
                 
                 Section {
@@ -200,7 +210,7 @@ struct QuizEditorView: View {
                 }
                 .listRowInsets(EdgeInsets()) // 버튼 바깥 여백 제거
             }
-            .listRowInsets(EdgeInsets(top: .zero, leading: .zero, bottom: .zero, trailing: .zero))
+            
             .navigationTitle("퀴즈 등록 / 편집")
             .navigationBarTitleDisplayMode(.inline)
             .onChange(of: selectedPhotoItems) { newItems in
@@ -310,25 +320,45 @@ struct QuizEditorView: View {
     
     @ViewBuilder
     private func mediaPreview(item: MediaItem) -> some View {
-        VStack {
             if item.type == .image, let uiImage = UIImage(data: item.data) {
                 Image(uiImage: uiImage)
                     .resizable()
                     .scaledToFit()
                     .frame(maxHeight: 200)
-                    .cornerRadius(12)
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .overlay(alignment: .topTrailing) {
+                        deleteButton(for: item)
+                    }
             } else if item.type == .video {
                 if let url = item.previewURL {
                     VideoPlayer(player: AVPlayer(url: url))
                         .frame(height: 200)
                         .cornerRadius(12)
+                        .overlay(alignment: .topTrailing) {
+                            deleteButton(for: item)
+                        }
                 } else {
                     ProgressView()
                         .frame(height: 200)
                 }
             }
+    }
+    
+    private func deleteButton(for item: MediaItem) -> some View {
+        Button(action: {
+            if let index = selectedMediaItems.firstIndex(where: { $0.id == item.id }) {
+                if let url = selectedMediaItems[index].previewURL {
+                    try? FileManager.default.removeItem(at: url)
+                }
+                selectedMediaItems.remove(at: index)
+            }
+        }) {
+                Image(systemName: "xmark.circle.fill")
+                    .foregroundColor(.red)
+                    .clipShape(Circle())
         }
-        .frame(maxWidth: .infinity)
+        .buttonStyle(.plain)
+        .padding(8)
     }
 }
 
