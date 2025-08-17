@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-/// ⬇️정답으로 사용할 보기를 체크해주세요 
+/// ⬇️ 안내 라벨
 private struct InfoNote: View {
     var text: String
     var body: some View {
@@ -28,60 +28,67 @@ private struct InfoNote: View {
 }
 
 struct QuizSessionView: View {
-    
+
     let questions: [QuizQuestion]
     @State private var index: Int = 0
-    @State private var selections: [Int: Set<Int>] = [:]   // 문항별 선택 저장
-    @State private var revealed: Bool = false               // 정답 공개 여부
+    @State private var selections: [Int: Set<Int>] = [:]   // 문항별(보정된 보기 기준) 선택 저장
+    @State private var revealed: Bool = false              // 정답 공개 여부
     @State private var showSummary = false
     @State private var finalPercent = 0
 
-    // 여기 수정함!! Start 로 돌아가기 위해 pop
     @Environment(\.dismiss) private var dismiss
-    @State private var popAfterSummary = false              // 시트 닫힌 뒤 pop 플래그
+    @State private var popAfterSummary = false
 
-    
     init(questions: [QuizQuestion]? = nil) {
         self.questions = questions ?? QuizQuestion.sample
     }
 
     var body: some View {
         let total = max(questions.count, 1)
-        let q = questions[index]
+
+        // 원본 문항
+        let raw = questions[index]
+
+        // ✅ “보기의 첫 항목을 문제로 승격” 보정 데이터
+        let displayed = displayedData(from: raw)
         let selected = selections[index] ?? []
 
         VStack(spacing: 16) {
-          
+
+            // 진행도
             VStack(spacing: 6) {
                 ProgressView(value: Double(index + 1), total: Double(total))
                     .tint(.blue)
                     .padding(.horizontal)
                 Text("\(index + 1) / \(total)")
-                    .font(.footnote).foregroundStyle(.secondary)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
             }
             .padding(.top, 6)
 
             ScrollView {
                 VStack(spacing: 16) {
                     SectionCard("문제") {
-                        Text(q.text)
+                        Text(displayed.text) // ← 보기[0]이 문제로 노출
                             .font(.title3.bold())
                             .frame(maxWidth: .infinity, alignment: .leading)
                     }
 
                     SectionCard("보기") {
                         VStack(spacing: 12) {
-
-                            // ⬇️ 등록/편집 화면과 동일 톤의 설명 박스 추가
                             InfoNote(text: "정답으로 사용할 보기를 체크해주세요.")
 
                             VStack(spacing: 10) {
-                                ForEach(q.options.indices, id: \.self) { i in
+                                ForEach(displayed.options.indices, id: \.self) { i in
                                     CheckboxRow(
                                         index: i + 1,
-                                        text: q.options[i],
+                                        text: displayed.options[i],
                                         isSelected: selected.contains(i),
-                                        feedback: feedbackState(for: i, selected: selected, answers: q.answerIndices)
+                                        feedback: feedbackState(
+                                            for: i,
+                                            selected: selected,
+                                            answers: displayed.answerIndices
+                                        )
                                     )
                                     .contentShape(Rectangle())
                                     .onTapGesture {
@@ -99,25 +106,21 @@ struct QuizSessionView: View {
                 .padding(.bottom, 10)
             }
 
-            // 하단 버튼: 공개 전엔 "정답 확인", 공개 후엔 "다음/제출"
+            // 하단 버튼
             Button {
                 if !revealed {
-                    // 1) 정답 색상 공개
                     revealed = true
                 } else {
-                    // 2) 다음 문제 또는 제출
                     if index < total - 1 {
                         index += 1
                         revealed = false
                     } else {
-                        finalPercent = overallPercent()
+                        finalPercent = overallPercent() // 모든 문항을 보정 기준으로 채점
                         showSummary = true
                     }
                 }
             } label: {
-                Text(!revealed
-                     ? "정답 확인"
-                     : (index == total - 1 ? "제출하기" : "다음으로"))
+                Text(!revealed ? "정답 확인" : (index == total - 1 ? "제출하기" : "다음으로"))
                     .fontWeight(.semibold)
                     .frame(maxWidth: .infinity)
                     .padding()
@@ -125,20 +128,18 @@ struct QuizSessionView: View {
                     .foregroundColor((selected.isEmpty && !revealed) ? .gray : .white)
                     .clipShape(RoundedRectangle(cornerRadius: 14))
             }
-            .disabled(selected.isEmpty && !revealed)   // 선택 전엔 공개 버튼 비활성화
+            .disabled(selected.isEmpty && !revealed)
             .padding(.horizontal, 16)
             .padding(.bottom, 12)
         }
         .navigationTitle("문제 풀이")
         .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $showSummary) {
-            // ⬇️ 퍼센트 요약 시트 (total/correct 버전 써도 onClose 동일)
             QuizSummaryScoreView(percent: finalPercent) {
-                // 시트 닫기 + 이후 pop하도록 표시
                 popAfterSummary = true
                 showSummary = false
 
-                // (선택) 다음 풀이 대비 초기화
+                // 다음 풀이 대비 초기화
                 index = 0
                 selections.removeAll()
                 revealed = false
@@ -146,31 +147,43 @@ struct QuizSessionView: View {
             }
             .presentationDetents([.fraction(0.85)])
         }
-        // 시트가 실제로 닫힌 시점에 Start 화면으로 pop
         .onChange(of: showSummary) { isPresented in
             if !isPresented && popAfterSummary {
                 popAfterSummary = false
-                dismiss()   // ← NavigationStack에서 한 단계 뒤로
+                dismiss()
             }
         }
     }
 
-    // 각 옵션의 피드백 상태 계산
-    private func feedbackState(for i: Int, selected: Set<Int>, answers: Set<Int>) -> ChoiceFeedback? {
-        guard revealed else { return nil } // 공개 전엔 색상 피드백 없음
-        if answers.contains(i) { return .correct }      // 정답 = 초록
-        if selected.contains(i) { return .wrong }       // 선택한 오답 = 빨강
-        return .dimmed                                  // 나머지 흐리게
+    // MARK: - 보정 유틸
+    /// 보기의 첫 번째를 '문제'로 승격하고 나머지를 보기로 사용
+    /// 정답 인덱스는 0 제거 보정으로 -1 시프트
+    private func displayedData(from raw: QuizQuestion) -> (text: String, options: [String], answerIndices: Set<Int>) {
+        let questionText = raw.options.first ?? raw.text
+        let options = Array(raw.options.dropFirst())
+        let answers = Set(raw.answerIndices.compactMap { idx in
+            idx == 0 ? nil : idx - 1
+        })
+        return (questionText, options, answers)
     }
 
-    // 전체 점수(%): 각 문항 점수 평균
+    // 각 옵션의 피드백 상태 계산 (보정된 보기 인덱스 기반)
+    private func feedbackState(for i: Int, selected: Set<Int>, answers: Set<Int>) -> ChoiceFeedback? {
+        guard revealed else { return nil }
+        if answers.contains(i) { return .correct }
+        if selected.contains(i) { return .wrong }
+        return .dimmed
+    }
+
+    // 전체 점수(%): 각 문항을 보정 데이터 기준으로 채점
     private func overallPercent() -> Int {
         guard !questions.isEmpty else { return 0 }
-        let percents = questions.enumerated().map { (idx, q) in
-            computeScorePercent(
+        let percents: [Int] = questions.enumerated().map { (idx, q) in
+            let d = displayedData(from: q)
+            return computeScorePercent(
                 selected: selections[idx] ?? [],
-                answers: q.answerIndices,
-                optionCount: q.options.count
+                answers: d.answerIndices,
+                optionCount: d.options.count
             )
         }
         let avg = Double(percents.reduce(0, +)) / Double(percents.count)
@@ -191,6 +204,6 @@ private func computeScorePercent(selected: Set<Int>, answers: Set<Int>, optionCo
 }
 
 #Preview {
-    NavigationStack { QuizSessionView() }   // 샘플 데이터로 미리보기
+    NavigationStack { QuizSessionView() }
 }
 

@@ -78,3 +78,23 @@ extension Array where Element == TeamQuestionText {
     }
 }
 
+
+// MARK: - SwiftData → 세션모델 변환
+import SwiftData
+
+extension Quiz {
+    /// 이 퀴즈를 "한 문항(보기 여러 개)"으로 플레이할 수 있는 경량 모델로 변환
+    /// - 보기: Question.content
+    /// - 정답: Question.isCorrect == true 인 항목의 인덱스(복수 가능)
+    func toPlayQuestions() -> [QuizQuestion] {
+        let opts = questions.map { $0.content }
+        let answers = Set(
+            questions.enumerated().compactMap { idx, q in
+                q.isCorrect ? idx : nil
+            }
+        )
+        return [
+            QuizQuestion(text: self.title, options: opts, answerIndices: answers)
+        ]
+    }
+}

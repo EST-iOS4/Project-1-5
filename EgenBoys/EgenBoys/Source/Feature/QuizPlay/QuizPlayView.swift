@@ -10,7 +10,7 @@ import SwiftUI
 struct QuizPlayView: View {
     var body: some View {
         NavigationStack {
-            StartQuizView()
+            StartQuizView()   // ✅ 내부에서 SwiftData로 퀴즈 선택
         }
     }
 }
@@ -18,3 +18,4 @@ struct QuizPlayView: View {
 #Preview {
     QuizPlayView()
 }
+
