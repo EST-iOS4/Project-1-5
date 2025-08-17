@@ -7,8 +7,25 @@
 
 import SwiftUI
 
-// QuizQuestion / ChoiceFeedback / SectionCard / CheckboxRow 는
-// 각각 QuizPlayModels.swift / QuizUIComponents.swift 에 있다고 가정합니다.
+/// ⬇️정답으로 사용할 보기를 체크해주세요 
+private struct InfoNote: View {
+    var text: String
+    var body: some View {
+        HStack(alignment: .center, spacing: 8) {
+            Image(systemName: "checkmark.circle.fill")
+                .imageScale(.medium)
+                .foregroundStyle(.blue)
+            Text(text)
+                .font(.subheadline)
+                .foregroundStyle(.primary)
+            Spacer(minLength: 0)
+        }
+        .padding(12)
+        .background(Color(.systemGray6))
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .accessibilityElement(children: .combine)
+    }
+}
 
 struct QuizSessionView: View {
     
@@ -53,20 +70,26 @@ struct QuizSessionView: View {
                     }
 
                     SectionCard("보기") {
-                        VStack(spacing: 10) {
-                            ForEach(q.options.indices, id: \.self) { i in
-                                CheckboxRow(
-                                    index: i + 1,
-                                    text: q.options[i],
-                                    isSelected: selected.contains(i),
-                                    feedback: feedbackState(for: i, selected: selected, answers: q.answerIndices)
-                                )
-                                .contentShape(Rectangle())
-                                .onTapGesture {
-                                    guard !revealed else { return } // 공개 후엔 잠금
-                                    var s = selections[index] ?? []
-                                    if s.contains(i) { s.remove(i) } else { s.insert(i) }
-                                    selections[index] = s
+                        VStack(spacing: 12) {
+
+                            // ⬇️ 등록/편집 화면과 동일 톤의 설명 박스 추가
+                            InfoNote(text: "정답으로 사용할 보기를 체크해주세요.")
+
+                            VStack(spacing: 10) {
+                                ForEach(q.options.indices, id: \.self) { i in
+                                    CheckboxRow(
+                                        index: i + 1,
+                                        text: q.options[i],
+                                        isSelected: selected.contains(i),
+                                        feedback: feedbackState(for: i, selected: selected, answers: q.answerIndices)
+                                    )
+                                    .contentShape(Rectangle())
+                                    .onTapGesture {
+                                        guard !revealed else { return } // 공개 후엔 잠금
+                                        var s = selections[index] ?? []
+                                        if s.contains(i) { s.remove(i) } else { s.insert(i) }
+                                        selections[index] = s
+                                    }
                                 }
                             }
                         }
@@ -170,3 +193,4 @@ private func computeScorePercent(selected: Set<Int>, answers: Set<Int>, optionCo
 #Preview {
     NavigationStack { QuizSessionView() }   // 샘플 데이터로 미리보기
 }
+
