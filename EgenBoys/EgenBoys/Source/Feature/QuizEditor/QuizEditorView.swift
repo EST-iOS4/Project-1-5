@@ -211,7 +211,7 @@ struct QuizEditorView: View {
             }
             
             .navigationTitle("퀴즈 등록 / 편집")
-            .navigationBarTitleDisplayMode(.inline)
+            .navigationBarTitleDisplayMode(.large)
             .onChange(of: selectedPhotoItems) { newItems in
                 Task {
                     // 사진 / 영상을 고르면 비동기로 처리
