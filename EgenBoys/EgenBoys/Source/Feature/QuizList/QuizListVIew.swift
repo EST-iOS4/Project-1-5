@@ -13,6 +13,9 @@ struct QuizListView: View {
     @Query private var quizList: [Quiz]
     @State private var selectedCategory: QuizCategory = .all
     
+    @State private var isShowingEditor = false
+    @State private var quizToEdit: Quiz?
+    
     var body: some View {
         VStack(spacing: 8) {
             Picker("카테고리 선택", selection: $selectedCategory) {
@@ -29,11 +32,30 @@ struct QuizListView: View {
                     NavigationLink(destination: QuizDetailView(item: item)) {
                         QuizItemView(item: item)
                     }
+                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                        Button(role: .destructive) {
+                            deleteQuiz(item)
+                        } label: {
+                            Label("삭제", systemImage: "trash")
+                        }
+                        Button {
+                            quizToEdit = item
+                            isShowingEditor = true
+                        } label: {
+                            Label("편집", systemImage: "pencil")
+                        }
+                        .tint(.blue)
+                    }
                 }
                 .listRowInsets(EdgeInsets(top: .zero, leading: .zero, bottom: .zero, trailing: 15))
             }
             .contentMargins(.all, 16)
             .animation(.easeInOut, value: selectedCategory)
+            .sheet(isPresented: $isShowingEditor) {
+                if let quiz = quizToEdit {
+                    QuizEditorView(quizToEdit: quiz)
+                }
+            }
             
             /// TODO: - SwiftData MockData추가를 위한 버튼, 이후 삭제 예정
             Button("데이터 추가하기") {
@@ -49,6 +71,15 @@ struct QuizListView: View {
             return quizList
         } else {
             return quizList.filter { $0.category == selectedCategory }
+        }
+    }
+    
+    private func deleteQuiz(_ quiz: Quiz) {
+        modelContext.delete(quiz)
+        do {
+            try modelContext.save()
+        } catch {
+            print("퀴즈 삭제 실패: \(error)")
         }
     }
     
