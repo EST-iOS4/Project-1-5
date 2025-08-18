@@ -9,7 +9,23 @@ import SwiftUI
 
 struct DashboardView: View {
     var body: some View {
-        Text("대시보드 화면")
+        NavigationStack {
+            List {
+                Text("대시보드 화면")
+            }
+            .navigationTitle(Text("대시보드"))
+            .navigationBarTitleDisplayMode(.large)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    NavigationLink(destination: SettingsView()) {
+                        HStack {
+                            Text("설정")
+                            Image(systemName: "gearshape")
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
