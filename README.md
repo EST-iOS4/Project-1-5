@@ -67,4 +67,5 @@ iOS 17+ • SwiftUI • SwiftData • AVKit
 
 | 퀴즈 목록                                                     | 퀴즈 상세                                                   | 풀이 화면                                                 | 대시보드                                                       |
 | ------------------------------------------------------------- | ----------------------------------------------------------- | --------------------------------------------------------- | -------------------------------------------------------------- |
-| <img src="./docs/screenshots/tab-quizlist.png" width="250" /> | <img src="./docs/screenshots/tab-detail.png" width="250" /> | <img src="./docs/screenshots/tab-play.png" width="250" /> | <img src="./docs/screenshots/tab-dashboard.png" width="250" /> |
+| <img src="https://github.com/user-attachments/assets/7c20a783-034f-4726-b09b-ee8e5b844c22" width="250" /> | <img src="https://github.com/user-attachments/assets/96bd2f3f-153e-4f83-8557-2985721a818e" width="250" /> | <img src="https://github.com/user-attachments/assets/bb3a7147-9e55-44d2-b7c9-2d2b29090dd1" width="250" /> | <img src="https://github.com/user-attachments/assets/2155a1c2-89fd-441b-9c84-dcfddf78e505" width="250" /> |
+
