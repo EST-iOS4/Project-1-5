@@ -17,7 +17,7 @@ struct SectionCard<Content: View>: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title).font(.footnote).foregroundStyle(.secondary).padding(.horizontal, 4)
-            VStack(spacing: 0) { content.padding(14) }
+            VStack(spacing: 0) { content }
                 .background(.ultraThinMaterial)
                 .clipShape(RoundedRectangle(cornerRadius: 16))
         }

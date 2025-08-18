@@ -25,7 +25,7 @@ struct StartQuizView: View {
                             ForEach(difficulties, id: \.self) { Text($0) }
                         }
                         .pickerStyle(.menu)
-                    }
+                    }.padding(14)
                     Divider()
                     HStack {
                         Text("카테고리")
@@ -34,7 +34,7 @@ struct StartQuizView: View {
                             ForEach(categories, id: \.self) { Text($0) }
                         }
                         .pickerStyle(.menu)
-                    }
+                    }.padding(14)
                 }
                 
                 NavigationLink {
