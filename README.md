@@ -26,6 +26,7 @@ iOS 17+ • SwiftUI • SwiftData • AVKit
 
 ## 📁 디렉토리 구조
 
+```swift
 |EgenBoys
 | | |Source
 | | | |Common
@@ -49,6 +50,7 @@ iOS 17+ • SwiftUI • SwiftData • AVKit
 | | | |EgenBoysApp.swift
 | | |Resource
 | | | |Assets.xcassets
+```
 
 ---
 
