@@ -11,18 +11,18 @@ struct QuizSummaryView: View {
     let total: Int
     let correct: Int
     var onClose: () -> Void
-    
+
     var accuracy: String {
         guard total > 0 else { return "0%" }
         return String(format: "%.0f%%", (Double(correct) / Double(total)) * 100)
     }
-    
+
     var body: some View {
         NavigationStack {
             VStack(spacing: 20) {
                 Text("퀴즈 요약")
                     .font(.title3.bold())
-                
+
                 VStack(spacing: 12) {
                     HStack {
                         Text("총 문제")
@@ -46,7 +46,7 @@ struct QuizSummaryView: View {
                 .background(.ultraThinMaterial)
                 .clipShape(RoundedRectangle(cornerRadius: 16))
                 .padding(.horizontal)
-                
+
                 Button {
                     onClose()
                 } label: {
@@ -58,7 +58,7 @@ struct QuizSummaryView: View {
                         .clipShape(RoundedRectangle(cornerRadius: 14))
                 }
                 .padding(.horizontal)
-                
+
                 Spacer()
             }
             .padding(.top, 24)
@@ -69,7 +69,8 @@ struct QuizSummaryView: View {
 #Preview {
     QuizSummaryView(total: 10, correct: 7, onClose: {})
 }
-import SwiftUI
+
+// MARK: - 별도 요약(퍼센트만 있을 때)
 
 struct QuizSummaryScoreView: View {
     let percent: Int            // 0 ~ 100
@@ -115,3 +116,8 @@ struct QuizSummaryScoreView: View {
         }
     }
 }
+
+#Preview("Score Only") {
+    QuizSummaryScoreView(percent: 75, onClose: {})
+}
+

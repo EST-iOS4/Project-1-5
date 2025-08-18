@@ -1,3 +1,4 @@
+
 //
 //  QuizSessionView.swift
 //  EgenBoys
@@ -32,7 +33,7 @@ struct QuizSessionView: View {
     let questions: [QuizQuestion]
     @State private var index: Int = 0
     @State private var selections: [Int: Set<Int>] = [:]   // 문항별(보정된 보기 기준) 선택 저장
-    @State private var revealed: Bool = false              // 정답 공개 여부
+    @State private var revealed: Bool = false               // 정답 공개 여부
     @State private var showSummary = false
     @State private var finalPercent = 0
 
@@ -206,4 +207,3 @@ private func computeScorePercent(selected: Set<Int>, answers: Set<Int>, optionCo
 #Preview {
     NavigationStack { QuizSessionView() }
 }
-
