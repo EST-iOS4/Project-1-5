@@ -20,7 +20,7 @@ struct DashboardView: View {
                     NavigationLink(destination: SettingsView()) {
                         HStack {
                             Text("설정")
-                            Image(systemName: "gearshape.fill")
+                            Image(systemName: "gearshape")
                         }
                     }
                 }
