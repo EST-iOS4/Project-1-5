@@ -21,7 +21,6 @@ private struct InfoNote: View {
                 .foregroundStyle(.primary)
             Spacer(minLength: 0)
         }
-        .padding(12)
         .background(Color(.systemGray6))
         .clipShape(RoundedRectangle(cornerRadius: 12))
         .accessibilityElement(children: .combine)
@@ -42,8 +41,8 @@ struct QuizSessionView: View {
     @State private var popAfterSummary = false              // 시트 닫힌 뒤 pop 플래그
 
     
-    init(questions: [QuizQuestion]? = nil) {
-        self.questions = questions ?? QuizQuestion.sample
+    init(questions: [QuizQuestion] = QuizQuestion.sample) {
+        self.questions = questions
     }
 
     var body: some View {
@@ -68,13 +67,14 @@ struct QuizSessionView: View {
                         Text(q.text)
                             .font(.title3.bold())
                             .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding()
                     }
 
                     SectionCard("보기") {
                         VStack(spacing: 12) {
 
                             // ⬇️ 등록/편집 화면과 동일 톤의 설명 박스 추가
-                            InfoNote(text: "정답으로 사용할 보기를 체크해주세요.")
+                            InfoNote(text: "복수 정답 가능! 모두 선택해 주세요.")
 
                             VStack(spacing: 10) {
                                 ForEach(q.options.indices, id: \.self) { i in
@@ -93,7 +93,7 @@ struct QuizSessionView: View {
                                     }
                                 }
                             }
-                        }
+                        }.padding()
                     }
                 }
                 .padding(.horizontal, 16)
