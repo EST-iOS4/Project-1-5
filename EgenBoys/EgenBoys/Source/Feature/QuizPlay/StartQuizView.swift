@@ -36,6 +36,7 @@ struct StartQuizView: View {
                     SectionCard("난이도 및 카테고리") {
                         HStack {
                             Text("난이도")
+                                .withCustomFont()
                             Spacer()
                             Picker("", selection: $difficulty) {
                                 ForEach(difficulties, id: \.self) { Text($0.rawValue) }
@@ -48,6 +49,7 @@ struct StartQuizView: View {
                         
                         HStack {
                             Text("카테고리")
+                                .withCustomFont()
                             Spacer()
                             Picker("", selection: $category) {
                                 ForEach(categories, id: \.self) { Text($0.rawValue) }
