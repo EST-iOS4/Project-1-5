@@ -42,10 +42,12 @@ struct AnswerOptionRowView: View {
         HStack(alignment: .center) {
             Text("\(index + 1).")
                 .foregroundColor(.gray)
+                .withCustomFont()
             
             TextField("선택지를 입력하세요.", text: $option.text)
                 .autocorrectionDisabled()
                 .padding(.vertical, 10)
+                .withCustomFont()
             
             Button(action: {
                 option.isCorrect.toggle()
@@ -106,10 +108,12 @@ struct QuizEditorView: View {
                         TextField("문제를 입력하세요.", text: $newQuestion.questionText, axis: .vertical)
                             .autocorrectionDisabled()
                             .padding(.vertical, 8)
+                            .withCustomFont()
                         Divider()
                         TextField("문제에 대한 설명을 입력하세요.", text: $newQuestion.description, axis: .vertical)
                             .autocorrectionDisabled()
                             .padding(.vertical, 8)
+                            .withCustomFont()
                     }
                 } header: {
                     Text("문제 및 설명")
@@ -124,6 +128,7 @@ struct QuizEditorView: View {
                             Text("정답으로 사용할 보기를 체크해주세요.")
                                 .font(.subheadline)
                                 .foregroundColor(.secondary)
+                                .withCustomFont()
                             Spacer()
                         }
                         .padding(.vertical, 8)
@@ -142,6 +147,7 @@ struct QuizEditorView: View {
                             HStack {
                                 Image(systemName: "plus.circle.fill")
                                 Text("보기 추가")
+                                    .withCustomFont()
                             }
                         }
                         .padding(.vertical, 8)
@@ -190,6 +196,7 @@ struct QuizEditorView: View {
                         HStack {
                             Image(systemName: "photo.on.rectangle.angled")
                             Text("사진 보관함에서 추가하기")
+                                .withCustomFont()
                         }
                         .foregroundColor(.accentColor)
                     }
