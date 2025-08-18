@@ -145,11 +145,11 @@ struct QuizSessionView: View {
                 revealed = false
                 finalPercent = 0
             }
-            .presentationDetents([.fraction(0.85)])
+            .presentationDetents([.fraction(0.5)])
         }
         // 시트가 실제로 닫힌 시점에 Start 화면으로 pop
         .onChange(of: showSummary) { isPresented in
-            if !isPresented && popAfterSummary {
+            if !isPresented {
                 popAfterSummary = false
                 dismiss()   // ← NavigationStack에서 한 단계 뒤로
             }
