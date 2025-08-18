@@ -70,6 +70,8 @@ struct QuizEditorView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     
+    var quizToEdit: Quiz?
+    
     @State private var newQuestion = CreateQuestion()
     
     @State private var selectedDifficulty: Difficulty = .medium
@@ -209,8 +211,8 @@ struct QuizEditorView: View {
                 }
                 .listRowInsets(EdgeInsets()) // 버튼 바깥 여백 제거
             }
-            
             .navigationTitle("퀴즈 등록 / 편집")
+            .onAppear(perform: setupForEditing)
             .navigationBarTitleDisplayMode(.large)
             .onChange(of: selectedPhotoItems) { newItems in
                 Task {
@@ -262,17 +264,28 @@ struct QuizEditorView: View {
         }
         let (imageURL, videoURL) = saveMediaFiles()
         
-        let newQuizForSwiftData = Quiz(
-            title: newQuestion.questionText,
-            explanation: newQuestion.description,
-            category: selectedCategory,
-            questions: questionsForSwiftData,
-            imageURL: imageURL,
-            videoURL: videoURL,
-            difficultty: selectedDifficulty
-        )
-        
-        modelContext.insert(newQuizForSwiftData)
+        if let quiz = quizToEdit {
+            quiz.title = newQuestion.questionText
+            quiz.explanation = newQuestion.description
+            quiz.category = selectedCategory
+            quiz.questions = questionsForSwiftData
+            quiz.difficultty = selectedDifficulty
+            
+            if let imageURL { quiz.imageURL = imageURL }
+            if let videoURL { quiz.videoURL = videoURL }
+        } else {
+            let newQuizForSwiftData = Quiz(
+                title: newQuestion.questionText,
+                explanation: newQuestion.description,
+                category: selectedCategory,
+                questions: questionsForSwiftData,
+                imageURL: imageURL,
+                videoURL: videoURL,
+                difficultty: selectedDifficulty
+            )
+            
+            modelContext.insert(newQuizForSwiftData)
+        }
         do {
             try modelContext.save()
             print("퀴즈 저장 완료.")
@@ -315,6 +328,41 @@ struct QuizEditorView: View {
         selectedCategory = .ios
         selectedPhotoItems = []
         selectedMediaItems = []
+    }
+    private func setupForEditing() {
+        guard let quiz = quizToEdit else { return }
+        
+        newQuestion.questionText = quiz.title
+        newQuestion.description = quiz.explanation
+        newQuestion.answerOptions = quiz.questions.map { question in
+            AnswerOption(text: question.content, isCorrect: question.isCorrect)
+        }
+        selectedDifficulty = quiz.difficultty
+        selectedCategory = quiz.category
+        
+        selectedMediaItems.removeAll()
+        
+        Task {
+            if let imageURL = quiz.imageURL {
+                do {
+                    let imageData = try Data(contentsOf: imageURL)
+                    let imageItem = MediaItem(type: .image, data: imageData)
+                    await MainActor.run { selectedMediaItems.append(imageItem) }
+                } catch {
+                    print("저장된 이미지 파일 로드 실패: \(error)")
+                }
+            }
+            
+            if let videoURL = quiz.videoURL {
+                do {
+                    let videoData = try Data(contentsOf: videoURL)
+                    let videoItem = MediaItem(type: .video, data: videoData, previewURL: videoURL)
+                    await MainActor.run { selectedMediaItems.append(videoItem) }
+                } catch {
+                    print("저장된 비디오 파일 로드 실패: \(error)")
+                }
+            }
+        }
     }
     
     @ViewBuilder
