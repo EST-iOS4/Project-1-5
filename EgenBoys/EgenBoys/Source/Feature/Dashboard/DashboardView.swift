@@ -24,6 +24,53 @@ struct DashboardView: View {
                         }
                     }
                 }
+struct ScoreRingCard: View {
+    var score: Double // 0~100
+    
+    var body: some View {
+        HStack(spacing: 14) {
+            ZStack {
+                Circle()
+                    .trim(from: 0, to: 1)
+                    .stroke(Color.gray.opacity(0.2), style: StrokeStyle(lineWidth: 14, lineCap: .round))
+                    .rotationEffect(.degrees(-90))
+                Circle()
+                    .trim(from: 0, to: CGFloat(min(max(score/100, 0), 1)))
+                    .stroke(.blue, style: StrokeStyle(lineWidth: 14, lineCap: .round))
+                    .rotationEffect(.degrees(-90))
+                    .animation(.smooth(duration: 0.6), value: score)
+                VStack(spacing: 2) {
+                    Text(String(format: "%.0f", score))
+                        .font(.title).bold()
+                    Text("평균 점수")
+                        .font(.caption).foregroundStyle(.secondary)
+                }
+            }
+            .frame(width: 124, height: 124)
+            
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(spacing: 8) {
+                    Image(systemName: "chart.pie.fill")
+                    Text("전체 평균 점수")
+                        .font(.subheadline).fontWeight(.semibold)
+                }
+                ProgressView(value: min(max(score/100, 0), 1))
+                Text("최근 성과를 기반으로 산출됩니다.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .padding(16)
+        .background(.thinMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .strokeBorder(.separator, lineWidth: 0.6)
+        )
+    }
+}
+
 struct RecentRowView: View {
     let row: RecentRow
     var body: some View {
