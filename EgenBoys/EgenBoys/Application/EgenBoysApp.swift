@@ -18,6 +18,6 @@ struct EgenBoysApp: App {
                 .environmentObject(settingsViewModel)
                 .preferredColorScheme(settingsViewModel.colorScheme)
         }
-        .modelContainer(for: [Quiz.self, Question.self])
+        .modelContainer(for: [Quiz.self, Question.self, QuizSession.self])
     }
 }

@@ -7,8 +7,6 @@
 
 import SwiftUI
 
-
-///
 private struct InfoNote: View {
     var text: String
     var body: some View {
@@ -28,6 +26,9 @@ private struct InfoNote: View {
 }
 
 struct QuizSessionView: View {
+    @Environment(\.modelContext) private var modelContext
+    @State private var session: QuizSession? = nil
+    @State private var startedAt = Date()
     
     let questions: [QuizQuestion]
     @State private var index: Int = 0
@@ -35,23 +36,24 @@ struct QuizSessionView: View {
     @State private var revealed: Bool = false               // 정답 공개 여부
     @State private var showSummary = false
     @State private var finalPercent = 0
-
+    
     // 여기 수정함!! Start 로 돌아가기 위해 pop
     @Environment(\.dismiss) private var dismiss
     @State private var popAfterSummary = false              // 시트 닫힌 뒤 pop 플래그
-
+    
     
     init(questions: [QuizQuestion] = QuizQuestion.sample) {
         self.questions = questions
+        self._startedAt = State(initialValue: Date())
     }
-
+    
     var body: some View {
         let total = max(questions.count, 1)
         let q = questions[index]
         let selected = selections[index] ?? []
-
+        
         VStack(spacing: 16) {
-          
+            
             VStack(spacing: 6) {
                 ProgressView(value: Double(index + 1), total: Double(total))
                     .tint(.blue)
@@ -60,7 +62,7 @@ struct QuizSessionView: View {
                     .font(.footnote).foregroundStyle(.secondary)
             }
             .padding(.top, 6)
-
+            
             ScrollView {
                 VStack(spacing: 16) {
                     SectionCard("문제") {
@@ -69,13 +71,13 @@ struct QuizSessionView: View {
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding()
                     }
-
+                    
                     SectionCard("보기") {
                         VStack(spacing: 12) {
-
+                            
                             // ⬇️ 등록/편집 화면과 동일 톤의 설명 박스 추가
                             InfoNote(text: "복수 정답 가능! 모두 선택해 주세요.")
-
+                            
                             VStack(spacing: 10) {
                                 ForEach(q.options.indices, id: \.self) { i in
                                     CheckboxRow(
@@ -99,7 +101,7 @@ struct QuizSessionView: View {
                 .padding(.horizontal, 16)
                 .padding(.bottom, 10)
             }
-
+            
             // 하단 버튼: 공개 전엔 "정답 확인", 공개 후엔 "다음/제출"
             Button {
                 if !revealed {
@@ -119,12 +121,12 @@ struct QuizSessionView: View {
                 Text(!revealed
                      ? "정답 확인"
                      : (index == total - 1 ? "제출하기" : "다음으로"))
-                    .fontWeight(.semibold)
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background((selected.isEmpty && !revealed) ? Color.gray.opacity(0.3) : Color.blue)
-                    .foregroundColor((selected.isEmpty && !revealed) ? .gray : .white)
-                    .clipShape(RoundedRectangle(cornerRadius: 14))
+                .fontWeight(.semibold)
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background((selected.isEmpty && !revealed) ? Color.gray.opacity(0.3) : Color.blue)
+                .foregroundColor((selected.isEmpty && !revealed) ? .gray : .white)
+                .clipShape(RoundedRectangle(cornerRadius: 14))
             }
             .disabled(selected.isEmpty && !revealed)   // 선택 전엔 공개 버튼 비활성화
             .padding(.horizontal, 16)
@@ -132,13 +134,23 @@ struct QuizSessionView: View {
         }
         .navigationTitle("문제 풀이")
         .navigationBarTitleDisplayMode(.inline)
+        .onAppear {
+            // 세션 시작 시 1회 생성(제목은 적절히)
+            if session == nil {
+                let title = questions.first?.text ?? "퀴즈 세션"
+                let s = QuizSession(title: title, startedAt: startedAt)
+                modelContext.insert(s)
+                session = s
+            }
+        }
         .sheet(isPresented: $showSummary) {
             // ⬇️ 퍼센트 요약 시트 (total/correct 버전 써도 onClose 동일)
             QuizSummaryScoreView(percent: finalPercent) {
+                saveSession()
                 // 시트 닫기 + 이후 pop하도록 표시
                 popAfterSummary = true
                 showSummary = false
-
+                
                 // (선택) 다음 풀이 대비 초기화
                 index = 0
                 selections.removeAll()
@@ -155,7 +167,31 @@ struct QuizSessionView: View {
             }
         }
     }
-
+    
+    private func saveSession() {
+        guard let s = session else { return }
+        // 1) 각 문항의 정오 생성(정답 = 완전일치로 판단)
+        let items: [Summary] = questions.enumerated().map { (idx, q) in
+            let sel = selections[idx] ?? []
+            let isFullyCorrect = sel == q.answerIndices
+            return Summary(content: q.text, isCorrect: isFullyCorrect, session: s)
+        }
+        
+        // 2) 세션 집계 채우기
+        let correct = items.filter(\.isCorrect).count
+        s.items.append(contentsOf: items)
+        s.endedAt = Date()
+        s.totalQuestions = questions.count
+        s.correctCount = correct
+        s.score = finalPercent // overallPercent()로 구한 0~100
+        
+        do {
+            try modelContext.save()
+        } catch {
+            print("세션 저장 실패: \(error)")
+        }
+    }
+    
     // 각 옵션의 피드백 상태 계산
     private func feedbackState(for i: Int, selected: Set<Int>, answers: Set<Int>) -> ChoiceFeedback? {
         guard revealed else { return nil } // 공개 전엔 색상 피드백 없음
@@ -163,7 +199,7 @@ struct QuizSessionView: View {
         if selected.contains(i) { return .wrong }       // 선택한 오답 = 빨강
         return .dimmed                                  // 나머지 흐리게
     }
-
+    
     // 전체 점수(%): 각 문항 점수 평균
     private func overallPercent() -> Int {
         guard !questions.isEmpty else { return 0 }
