@@ -24,6 +24,32 @@ struct DashboardView: View {
                         }
                     }
                 }
+struct StatCard: View {
+    var title: String
+    var value: String
+    
+    var body: some View {
+        VStack(spacing: 10) {
+            Text(title)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+            Text(value)
+                .font(.system(size: 28, weight: .semibold))
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+        }
+        .frame(maxWidth: .infinity, minHeight: 96)
+        .padding(.vertical, 16)
+        .background(.thinMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .strokeBorder(.separator, lineWidth: 0.6)
+        )
+    }
+}
+
 struct ScoreRingCard: View {
     var score: Double // 0~100
     
