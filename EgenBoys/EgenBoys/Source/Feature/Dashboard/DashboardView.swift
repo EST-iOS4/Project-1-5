@@ -5,25 +5,134 @@
 //  Created by 이건준 on 8/11/25.
 //
 
-import SwiftUI
+//  DashboardView.swift
+//  EgenBoys
 
+import SwiftUI
+import SwiftData
+
+// MARK: - Dashboard (SwiftData: QuizSession 사용)
 struct DashboardView: View {
+    @Environment(\.modelContext) private var modelContext
+
+    // 최근 것이 먼저 보이도록 정렬
+    @Query(sort: \QuizSession.startedAt, order: .reverse)
+    private var allSessions: [QuizSession]
+
+    enum RangeFilter: String, CaseIterable, Identifiable {
+        case all = "전체"
+        case last7 = "최근 7일"
+        case last30 = "최근 30일"
+        var id: String { rawValue }
+    }
+    @State private var range: RangeFilter = .all
+
+    // ✅ 범위 필터링
+    private var filteredSessions: [QuizSession] {
+        switch range {
+        case .all:
+            print("세션: \(allSessions)")
+            return allSessions
+        case .last7:
+            let from = Calendar.current.date(byAdding: .day, value: -7, to: Date()) ?? .distantPast
+            return allSessions.filter { $0.startedAt >= from }
+        case .last30:
+            let from = Calendar.current.date(byAdding: .day, value: -30, to: Date()) ?? .distantPast
+            return allSessions.filter { $0.startedAt >= from }
+        }
+    }
+
+    // ✅ 통계 계산 (sessions 기반)
+    private var stats: DashboardStats {
+        DashboardStats.from(sessions: filteredSessions)
+    }
+
+    // ✅ 최근 세션 목록 (세션 날짜 순)
+    private var recentRows: [RecentRow] {
+        filteredSessions.prefix(10).map { s in
+            let total = s.items.count
+            let correct = s.items.filter(\.isCorrect).count
+            return RecentRow(
+                id: s.id.uuidString,
+                title: s.title,
+                date: s.startedAt,
+                correct: correct,
+                total: total,
+                durationSec: nil // 세션에 지속시간 필드가 있으면 연결
+            )
+        }
+    }
+
     var body: some View {
         NavigationStack {
-            List {
-                Text("대시보드 화면")
-            }
-            .navigationTitle(Text("대시보드"))
-            .navigationBarTitleDisplayMode(.large)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    NavigationLink(destination: SettingsView()) {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 20) {
+
+                    // 헤더
+                    HStack(alignment: .firstTextBaseline) {
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("대시보드")
+                                .font(.system(size: 34, weight: .bold))
+                            Text("앱 전체 결과 요약")
+                                .foregroundStyle(.secondary)
+                                .font(.subheadline)
+                        }
+                        Spacer()
+                        // 설정 버튼 (원래 Picker 자리에)
+                        NavigationLink(destination: SettingsView()) {
+                            Label("설정", systemImage: "gearshape")
+                                .font(.subheadline.weight(.semibold))
+                                .labelStyle(.titleAndIcon)
+                                .padding(.vertical, 8)
+                                .padding(.horizontal, 12)
+                                .background(.thinMaterial)
+                                .clipShape(Capsule())
+                        }
+                    }
+
+                    // KPI 4-Grid
+                    LazyVGrid(
+                        columns: [GridItem(.flexible(), spacing: 14),
+                                  GridItem(.flexible(), spacing: 14)],
+                        spacing: 14
+                    ) {
+                        StatCard(title: "총 풀이 세션", value: "\(stats.totalSessions)")
+                        StatCard(title: "총 문제 수",   value: "\(stats.totalQuestions)")
+                        StatCard(title: "정답 수",     value: "\(stats.totalCorrect)")
+                        StatCard(title: "평균 정답률", value: "\(Int(stats.accuracy * 100))%")
+                    }
+
+                    // 전체 평균 점수(세션별 점수의 평균)
+                    ScoreRingCard(score: stats.avgScore)
+
+                    // 최근 세션
+                    VStack(alignment: .leading, spacing: 12) {
                         HStack {
-                            Text("설정")
-                            Image(systemName: "gearshape")
+                            Text("최근 세션")
+                                .font(.title3).fontWeight(.semibold)
+                            Spacer()
+                            NavigationLink("전체 보기") {
+                                RecentAllView(rows: recentRows)
+                            }
+                            .font(.footnote)
+                        }
+
+                        VStack(spacing: 12) {
+                            ForEach(recentRows.prefix(5)) { row in
+                                RecentRowView(row: row)
+                            }
                         }
                     }
                 }
+                .padding(.horizontal, 22)
+                .padding(.vertical, 26)
+            }
+            .background(Color(.systemGroupedBackground))
+            .navigationBarTitleDisplayMode(.inline)
+        }
+    }
+}
+
 // MARK: - 통계 계산 (sessions 기반)
 struct DashboardStats {
     var totalSessions: Int
@@ -64,6 +173,23 @@ struct DashboardStats {
         )
     }
 }
+
+// MARK: - Row 모델 (변경 없음)
+struct RecentRow: Identifiable, Hashable {
+    let id: String
+    let title: String
+    let date: Date
+    let correct: Int
+    let total: Int
+    let durationSec: Int?
+    var accuracy: Double { total == 0 ? 0 : Double(correct) / Double(total) }
+}
+
+// MARK: - 컴포넌트 (StatCard / ScoreRingCard / RecentRowView / RecentAllView 그대로 사용)
+
+
+// MARK: - 컴포넌트
+
 struct StatCard: View {
     var title: String
     var value: String
@@ -199,10 +325,20 @@ struct RecentAllView: View {
         .navigationTitle("최근 세션 전체")
     }
 }
+
+// MARK: - 편의: Quiz에 고유 ID 문자열 생성
+private extension Quiz {
+    var idString: String {
+        // SwiftData 모델이라도 고유 문자열이 필요할 때 대비
+        if let any = (self as AnyObject) as? CustomStringConvertible {
+            return String(describing: any)
         }
+        return UUID().uuidString
     }
 }
 
+// MARK: - Preview
 #Preview {
-    DashboardView()
+    NavigationStack { DashboardView() }
+        .preferredColorScheme(.light)
 }
