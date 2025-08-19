@@ -24,6 +24,46 @@ struct DashboardView: View {
                         }
                     }
                 }
+// MARK: - 통계 계산 (sessions 기반)
+struct DashboardStats {
+    var totalSessions: Int
+    var totalQuestions: Int
+    var totalCorrect: Int
+    var accuracy: Double   // 전체 문항 기준 정답 비율 (0.0 ~ 1.0)
+    var avgScore: Double   // 세션별 점수의 평균 (0.0 ~ 100.0)
+
+    static func from(sessions: [QuizSession]) -> DashboardStats {
+        let totalSessions = sessions.count
+
+        // 전체 문항/정답
+        let questionCounts = sessions.map { s -> (total: Int, correct: Int) in
+            let total = s.items.count
+            let correct = s.items.filter(\.isCorrect).count
+            return (total, correct)
+        }
+        let totalQuestions = questionCounts.reduce(0) { $0 + $1.total }
+        let totalCorrect = questionCounts.reduce(0) { $0 + $1.correct }
+        let accuracy = totalQuestions == 0 ? 0 : Double(totalCorrect) / Double(totalQuestions)
+
+        // 세션별 점수(정답/문항 * 100)의 평균 (세션 가중치 동일)
+        let perSessionScores: [Double] = sessions.map { s in
+            let total = max(1, s.items.count)
+            let correct = s.items.filter(\.isCorrect).count
+            return (Double(correct) / Double(total)) * 100.0
+        }
+        let avgScore = perSessionScores.isEmpty
+            ? 0
+            : perSessionScores.reduce(0, +) / Double(perSessionScores.count)
+
+        return .init(
+            totalSessions: totalSessions,
+            totalQuestions: totalQuestions,
+            totalCorrect: totalCorrect,
+            accuracy: accuracy,
+            avgScore: avgScore
+        )
+    }
+}
 struct StatCard: View {
     var title: String
     var value: String
