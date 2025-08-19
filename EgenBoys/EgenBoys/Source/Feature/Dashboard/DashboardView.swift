@@ -25,6 +25,23 @@ struct DashboardView: View {
                     }
                 }
             }
+struct RecentAllView: View {
+    let rows: [RecentRow]
+    var body: some View {
+        List {
+            ForEach(rows) { row in
+                RecentRowView(row: row)
+                    .listRowSeparator(.hidden)
+                    .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+                    .background(Color.clear)
+            }
+        }
+        .scrollContentBackground(.hidden)
+        .background(Color(.systemGroupedBackground))
+        .listStyle(.plain)
+        .navigationTitle("최근 세션 전체")
+    }
+}
         }
     }
 }
